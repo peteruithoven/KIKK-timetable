@@ -30,8 +30,8 @@ const gridStyle = computed(() => {
 const columnStyle = computed(() => ({
   height: `${height.value}px`,
   backgroundImage: [
-    `repeating-linear-gradient(to bottom, var(--color-zinc-700) 0 1px, transparent 1px ${60 * PX_PER_MINUTE}px)`,
-    `repeating-linear-gradient(to bottom, var(--color-zinc-800) 0 1px, transparent 1px ${30 * PX_PER_MINUTE}px)`,
+    `repeating-linear-gradient(to bottom, var(--color-line) 0 1px, transparent 1px ${60 * PX_PER_MINUTE}px)`,
+    `repeating-linear-gradient(to bottom, var(--color-line-faint) 0 1px, transparent 1px ${30 * PX_PER_MINUTE}px)`,
   ].join(", "),
 }));
 
@@ -55,29 +55,34 @@ const nowTop = computed(() => {
 <template>
   <div class="grid min-w-full" :style="gridStyle">
     <div
-      class="sticky top-0 left-0 z-30 flex flex-col justify-center border-b border-zinc-800 bg-zinc-900 px-2 py-2 text-center leading-tight"
+      class="sticky top-0 left-0 z-30 flex flex-col items-center justify-center border-b border-ink bg-paper py-2 leading-none"
     >
-      <span class="text-sm font-bold uppercase">{{ formatDay(date, { weekday: "short" }) }}</span>
-      <span class="text-[11px] text-zinc-400 uppercase">
-        {{ formatDay(date, { day: "numeric", month: "short" }) }}
+      <span class="text-[10px] text-neutral-500 uppercase">
+        {{ formatDay(date, { weekday: "short" }) }}
       </span>
+      <span class="font-display text-lg font-bold">{{ formatDay(date, { day: "numeric" }) }}</span>
     </div>
     <div
       v-for="venue in timetable.venues"
       :key="venue.name"
-      class="sticky top-0 z-20 flex flex-col justify-center border-b border-l border-zinc-800 bg-zinc-900 px-2 py-2 text-center leading-tight"
+      class="sticky top-0 z-20 flex flex-col justify-center border-b border-l border-b-ink border-l-line bg-paper px-2 py-2 text-center"
     >
-      <span v-if="venueParts(venue.name).building" class="truncate text-[11px] text-zinc-400">
+      <span
+        v-if="venueParts(venue.name).building"
+        class="truncate text-[10px] tracking-[0.12em] text-neutral-500 uppercase"
+      >
         {{ venueParts(venue.name).building }}
       </span>
-      <span class="truncate text-sm font-semibold">{{ venueParts(venue.name).room }}</span>
+      <span class="truncate font-display text-sm font-bold">
+        {{ venueParts(venue.name).room }}
+      </span>
     </div>
 
-    <div class="sticky left-0 z-10 bg-zinc-950" :style="{ height: `${height}px` }">
+    <div class="sticky left-0 z-10 bg-paper" :style="{ height: `${height}px` }">
       <span
         v-for="hour in hours"
         :key="hour.label"
-        class="absolute right-2 mt-1 text-xs text-zinc-400 tabular-nums"
+        class="absolute right-2 mt-1 text-xs font-light text-neutral-400 tabular-nums"
         :style="{ top: `${hour.top}px` }"
       >
         {{ hour.label }}
@@ -86,7 +91,7 @@ const nowTop = computed(() => {
     <div
       v-for="venue in timetable.venues"
       :key="venue.name"
-      class="relative border-l border-zinc-800"
+      class="relative border-l border-line"
       :style="columnStyle"
     >
       <TimetableEventCard
@@ -102,7 +107,7 @@ const nowTop = computed(() => {
       />
       <div
         v-if="nowTop !== null"
-        class="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-accent"
+        class="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-ink"
         :style="{ top: `${nowTop}px` }"
       />
     </div>

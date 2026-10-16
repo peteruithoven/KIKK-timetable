@@ -5,7 +5,7 @@ const props = defineProps<{
   height: number;
 }>();
 
-const LINE_HEIGHT = 15; // text-xs leading-tight
+const LINE_HEIGHT = 16; // leading-4
 // Margin rather than padding, so the clamped lines don't show in it.
 const MARGIN = 8; // my-1
 const MIN_IMAGE_HEIGHT = 32;
@@ -25,11 +25,11 @@ const titleStyle = computed(() => {
     target="_blank"
     rel="noopener"
     :title="`${event.start}${event.end ? `–${event.end}` : ''} · ${event.title}`"
-    class="group absolute flex flex-col overflow-hidden rounded-sm bg-zinc-800 transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-accent"
+    class="absolute flex clip-corner flex-col overflow-hidden bg-block transition-colors hover:bg-ink hover:text-paper focus-visible:bg-ink focus-visible:text-paper focus-visible:outline-none"
     :style="{ height: `${height}px` }"
   >
     <span
-      class="mx-2 my-1 line-clamp-(--lines) shrink-0 text-xs leading-tight font-semibold text-balance wrap-break-word"
+      class="mx-2 my-1 line-clamp-(--lines) shrink-0 pr-1 font-display text-[13px] leading-4 font-semibold text-balance wrap-break-word hyphens-auto"
       :style="titleStyle"
     >
       {{ event.title }}
@@ -40,7 +40,7 @@ const titleStyle = computed(() => {
       alt=""
       loading="lazy"
       decoding="async"
-      class="min-h-0 w-full flex-1 object-cover opacity-90 transition-opacity group-hover:opacity-100"
+      class="min-h-0 w-full flex-1 object-cover"
     />
   </a>
 </template>

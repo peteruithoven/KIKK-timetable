@@ -4,10 +4,17 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-16",
   devtools: { enabled: true },
-  css: ["~/assets/css/main.css"],
+  css: [
+    // The fonts kikkfestival.be uses, served by the app itself.
+    "@fontsource-variable/inter-tight/wght.css",
+    "@fontsource/poppins/300.css",
+    "@fontsource/poppins/400.css",
+    "~/assets/css/main.css",
+  ],
   app: {
     head: {
       title: "kikk-timetable",
+      htmlAttrs: { lang: "en" },
       link: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
     },
   },

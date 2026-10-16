@@ -53,19 +53,30 @@ useHead({ title: "KIKK 2026 Timetable" });
 
 <template>
   <div class="flex h-dvh flex-col">
-    <header class="shrink-0 border-b border-zinc-800 bg-zinc-900">
-      <div class="flex items-center justify-between gap-4 px-4 pt-3">
+    <header class="shrink-0 border-b border-line bg-paper px-4 pt-4 pb-3">
+      <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
-          <h1 class="text-lg font-bold tracking-tight">KIKK 2026 Timetable</h1>
-          <p v-if="data?.stale" class="text-xs text-zinc-400">Offline · as of {{ updatedAt }}</p>
+          <p
+            class="font-display text-[11px] font-semibold tracking-[0.3em] text-neutral-500 uppercase"
+          >
+            KIKK Festival 2026
+          </p>
+          <h1 class="font-display text-3xl leading-none font-extrabold tracking-tight uppercase">
+            Timetable
+          </h1>
+          <p v-if="data?.stale" class="mt-1 text-xs text-neutral-500">
+            Offline · as of {{ updatedAt }}
+          </p>
         </div>
-        <label class="shrink-0">
+        <label class="relative shrink-0">
           <span class="sr-only">Venue</span>
           <select
             v-model="selectedVenue"
-            class="rounded-full border bg-zinc-900 py-1.5 pr-2 pl-3 text-sm font-semibold transition-colors"
+            class="appearance-none border py-2 pr-8 pl-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors"
             :class="
-              selectedVenue === 'all' ? 'border-zinc-700 hover:border-zinc-500' : 'border-accent'
+              selectedVenue === 'all'
+                ? 'border-line bg-paper text-ink hover:border-ink'
+                : 'clip-corner border-ink bg-ink text-paper'
             "
           >
             <option value="all">All venues</option>
@@ -73,27 +84,41 @@ useHead({ title: "KIKK 2026 Timetable" });
               {{ venue.building }}
             </option>
           </select>
+          <svg
+            class="pointer-events-none absolute top-1/2 right-3 size-3 -translate-y-1/2"
+            :class="selectedVenue === 'all' ? 'text-ink' : 'text-paper'"
+            viewBox="0 0 12 12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <path d="M2 4l4 4 4-4" />
+          </svg>
         </label>
       </div>
-      <nav aria-label="Days" class="flex gap-2 overflow-x-auto px-4 py-3">
+      <nav aria-label="Days" class="mt-3 flex gap-2 overflow-x-auto">
         <NuxtLink
           v-for="day in days"
           :key="day"
           :to="{ query: { ...route.query, day } }"
           replace
           :aria-current="day === selectedDay ? 'date' : undefined"
-          class="shrink-0 rounded-full border border-zinc-700 px-4 py-1.5 text-sm font-semibold transition-colors hover:border-zinc-500 aria-[current]:border-accent aria-[current]:bg-accent aria-[current]:text-zinc-950"
+          class="flex w-14 shrink-0 flex-col items-center border border-line py-1.5 transition-colors hover:border-ink aria-[current]:clip-corner aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-paper"
         >
-          {{ formatDay(day, { weekday: "short", day: "numeric", month: "short" }) }}
+          <span class="text-[11px] uppercase">{{ formatDay(day, { weekday: "short" }) }}</span>
+          <span class="font-display text-xl leading-none font-bold">
+            {{ formatDay(day, { day: "numeric" }) }}
+          </span>
         </NuxtLink>
       </nav>
     </header>
 
     <main class="min-h-0 flex-1 overflow-auto overscroll-contain">
-      <p v-if="error && !data" class="p-4 text-zinc-400">
+      <p v-if="error && !data" class="p-4 text-neutral-500">
         The schedule couldn't be loaded. Please try again later.
       </p>
-      <p v-else-if="selectedDay && timetable.venues.length === 0" class="p-4 text-zinc-400">
+      <p v-else-if="selectedDay && timetable.venues.length === 0" class="p-4 text-neutral-500">
         Nothing at {{ selectedBuilding }} on
         {{ formatDay(selectedDay, { weekday: "long", day: "numeric", month: "long" }) }}.
       </p>

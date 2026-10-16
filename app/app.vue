@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-zinc-950 text-zinc-100 antialiased">
+  <div class="bg-paper font-sans text-ink antialiased">
     <NuxtRouteAnnouncer />
     <NuxtPage />
   </div>

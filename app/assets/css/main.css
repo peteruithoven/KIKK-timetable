@@ -1,10 +1,29 @@
 @import "tailwindcss";
 
-@theme {
-  --color-accent: #ffd400;
+/* Kikk's look: black on white, a little gray, no rounded corners. */
+@theme static {
+  --color-ink: #121212;
+  --color-paper: #ffffff;
+  --color-block: #ededed;
+  --color-line: #d9d9d9;
+  --color-line-faint: #f0f0f0;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Tight Variable", "Helvetica Neue", ui-sans-serif, sans-serif;
+}
+
+/* Top right corner cut off at 45°. Size with --corner. */
+@utility clip-corner {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--corner, 8px)) 0,
+    100% var(--corner, 8px),
+    100% 100%,
+    0 100%
+  );
 }
 
 :root {
-  color-scheme: dark;
-  background-color: var(--color-zinc-950);
+  color-scheme: light;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }
