@@ -1,0 +1,110 @@
+<script setup lang="ts">
+const props = defineProps<{
+  date: string;
+  timetable: DayTimetable;
+}>();
+
+const PX_PER_MINUTE = 2;
+const TIME_COLUMN = "3.5rem";
+const VENUE_COLUMN = "10rem";
+
+const height = computed(() => props.timetable.length * PX_PER_MINUTE);
+
+const hours = computed(() => {
+  const { startMinute, length } = props.timetable;
+  return Array.from({ length: length / 60 }, (_, i) => ({
+    top: i * 60 * PX_PER_MINUTE,
+    label: `${String((startMinute / 60 + i) % 24).padStart(2, "0")}:00`,
+  }));
+});
+
+const gridStyle = computed(() => {
+  const count = props.timetable.venues.length;
+  return {
+    gridTemplateColumns: `${TIME_COLUMN} repeat(${count}, minmax(${VENUE_COLUMN}, 1fr))`,
+    width: `calc(${TIME_COLUMN} + ${count} * ${VENUE_COLUMN})`,
+  };
+});
+
+// Hour lines, with a fainter line on the half hour.
+const columnStyle = computed(() => ({
+  height: `${height.value}px`,
+  backgroundImage: [
+    `repeating-linear-gradient(to bottom, var(--color-zinc-700) 0 1px, transparent 1px ${60 * PX_PER_MINUTE}px)`,
+    `repeating-linear-gradient(to bottom, var(--color-zinc-800) 0 1px, transparent 1px ${30 * PX_PER_MINUTE}px)`,
+  ].join(", "),
+}));
+
+// Only known on the client, so the server render has no time marker.
+const now = ref<number | null>(null);
+let timer: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  now.value = Date.now();
+  timer = setInterval(() => (now.value = Date.now()), 30_000);
+});
+onBeforeUnmount(() => clearInterval(timer));
+
+const nowTop = computed(() => {
+  const { startsAt, length } = props.timetable;
+  if (now.value === null || startsAt === null) return null;
+  const minutes = (now.value - startsAt) / 60_000;
+  return minutes >= 0 && minutes <= length ? minutes * PX_PER_MINUTE : null;
+});
+</script>
+
+<template>
+  <div class="grid min-w-full" :style="gridStyle">
+    <div
+      class="sticky top-0 left-0 z-30 flex flex-col justify-center border-b border-zinc-800 bg-zinc-900 px-2 py-2 text-center leading-tight"
+    >
+      <span class="text-sm font-bold uppercase">{{ formatDay(date, { weekday: "short" }) }}</span>
+      <span class="text-[11px] text-zinc-400 uppercase">
+        {{ formatDay(date, { day: "numeric", month: "short" }) }}
+      </span>
+    </div>
+    <div
+      v-for="venue in timetable.venues"
+      :key="venue.name"
+      class="sticky top-0 z-20 flex flex-col justify-center border-b border-l border-zinc-800 bg-zinc-900 px-2 py-2 text-center leading-tight"
+    >
+      <span v-if="venueParts(venue.name).building" class="truncate text-[11px] text-zinc-400">
+        {{ venueParts(venue.name).building }}
+      </span>
+      <span class="truncate text-sm font-semibold">{{ venueParts(venue.name).room }}</span>
+    </div>
+
+    <div class="sticky left-0 z-10 bg-zinc-950" :style="{ height: `${height}px` }">
+      <span
+        v-for="hour in hours"
+        :key="hour.label"
+        class="absolute right-2 mt-1 text-xs text-zinc-400 tabular-nums"
+        :style="{ top: `${hour.top}px` }"
+      >
+        {{ hour.label }}
+      </span>
+    </div>
+    <div
+      v-for="venue in timetable.venues"
+      :key="venue.name"
+      class="relative border-l border-zinc-800"
+      :style="columnStyle"
+    >
+      <TimetableEventCard
+        v-for="placed in venue.events"
+        :key="placed.event.id"
+        :event="placed.event"
+        :height="placed.duration * PX_PER_MINUTE - 2"
+        :style="{
+          top: `${placed.top * PX_PER_MINUTE + 1}px`,
+          left: `calc(${(placed.lane / placed.lanes) * 100}% + 2px)`,
+          width: `calc(${100 / placed.lanes}% - 4px)`,
+        }"
+      />
+      <div
+        v-if="nowTop !== null"
+        class="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-accent"
+        :style="{ top: `${nowTop}px` }"
+      />
+    </div>
+  </div>
+</template>
