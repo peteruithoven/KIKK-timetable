@@ -11,6 +11,17 @@ export default defineNuxtConfig({
       link: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
     },
   },
+  runtimeConfig: {
+    // Set through NUXT_SUPABASE_URL and NUXT_SUPABASE_KEY, see .env.example.
+    supabaseUrl: "",
+    supabaseKey: "",
+  },
+  typescript: {
+    nodeTsConfig: {
+      include: ["../scripts/**/*"],
+      compilerOptions: { types: ["node"] },
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
   },
