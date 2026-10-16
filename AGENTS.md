@@ -25,3 +25,29 @@ release. Add a tool name to select part of the graph. For example, run
 - [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
 
 <!--VITE PLUS END-->
+
+# Project: Nuxt + Tailwind
+
+This is a Nuxt 4 app styled with Tailwind CSS v4. Vite+ provides the tooling (check, lint, fmt, staged hooks); Nuxt runs the app.
+
+## Commands
+
+- Use `vp run dev`, `vp run build`, `vp run generate` and `vp run preview`. These scripts call `nuxt`. The built-ins `vp dev` and `vp build` start plain Vite and do not work for this app.
+- `vp run postinstall` runs `nuxt prepare`, which regenerates the types in `.nuxt/`. Run it if types for auto-imports or components are missing.
+- `vp check` does not type-check code inside `.vue` files.
+
+## Configuration
+
+- `vite.config.ts` holds Vite+ tooling config only. Nuxt never loads it. Put Vite options and plugins under the `vite` key in `nuxt.config.ts`.
+- The `NUXT_B5004` warning about `vite.config.ts` during `vp run dev` is expected. Do not delete or rename `vite.config.ts` to silence it.
+
+## Structure
+
+- App code lives in `app/` (Nuxt 4 `srcDir`): `app/app.vue`, and `app/pages/`, `app/components/`, `app/composables/` as needed. Static files go in the root `public/`.
+- Nuxt auto-imports Vue APIs (`ref`, `computed`), Nuxt composables (`useFetch`, `useState`) and components from `app/components/`. Explicit imports for these are not needed.
+
+## Tailwind
+
+- Tailwind v4 is CSS-first: there is no `tailwind.config.js`. It is loaded through `@tailwindcss/vite` in `nuxt.config.ts`.
+- The entry stylesheet is `app/assets/css/main.css`. Add theme tokens there with `@theme`.
+- Do not add `@nuxtjs/tailwindcss` or a PostCSS config.
