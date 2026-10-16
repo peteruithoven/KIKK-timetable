@@ -1,6 +1,6 @@
 export type TimetableEvent = Pick<
   FestivalEvent,
-  "id" | "kind" | "title" | "url" | "date" | "start" | "end" | "startsAt" | "venue" | "image"
+  "id" | "kind" | "slug" | "title" | "date" | "start" | "end" | "startsAt" | "venue" | "image"
 >;
 
 export interface PlacedEvent {

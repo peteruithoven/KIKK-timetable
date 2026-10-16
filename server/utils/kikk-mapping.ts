@@ -1,3 +1,4 @@
+import sanitizeHtml from "sanitize-html";
 import type { ByNightRow, ConferenceRow, KikkData, PanelPersonRow, PanelRow } from "./kikk-api";
 import { KIKK_SITE_URL } from "./kikk-api";
 
@@ -22,6 +23,38 @@ function text(value: string | null | undefined): string | null {
 function localized(fr: string | null | undefined, en: string | null | undefined): Localized | null {
   const result = { fr: text(fr), en: text(en) };
   return result.fr || result.en ? result : null;
+}
+
+const RICH_TEXT_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: ["p", "div", "br", "b", "strong", "i", "em", "u", "a", "ul", "ol", "li"],
+  allowedAttributes: { a: ["href"] },
+  allowedSchemes: ["http", "https", "mailto"],
+  // Other tags (font, span) are dropped but their text is kept.
+  disallowedTagsMode: "discard",
+  // The editor wraps blank lines in their own blocks; spacing comes from CSS.
+  exclusiveFilter: (frame) => ["p", "div"].includes(frame.tag) && !frame.text.trim(),
+  transformTags: { a: sanitizeHtml.simpleTransform("a", { rel: "noopener", target: "_blank" }) },
+};
+
+/** Plain text gets paragraphs; HTML from the CMS is reduced to basic formatting. */
+function richHtml(value: string | null | undefined): string | null {
+  const source = text(value);
+  if (!source) return null;
+  const html = /<[a-z][\s\S]*>/i.test(source)
+    ? source
+    : source
+        .split(/\n\s*\n/)
+        .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+        .join("");
+  return text(sanitizeHtml(html, RICH_TEXT_OPTIONS));
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function richText(fr: string | null | undefined, en: string | null | undefined): Localized | null {
+  return localized(richHtml(fr), richHtml(en));
 }
 
 function venue(...candidates: (string | null | undefined)[]): string | null {
@@ -80,7 +113,7 @@ function panelPerson(person: PanelPersonRow | null | undefined): Person | null {
     name,
     company: text(person.company),
     role: localized(person.role, person.role_en),
-    bio: localized(person.description, person.description_en),
+    bio: richText(person.description, person.description_en),
     location: null,
     photo: text(person.photo_url),
   };
@@ -104,15 +137,15 @@ function fromConference(row: ConferenceRow): FestivalEvent | null {
             name: speaker,
             company: text(row.company_studio),
             role: null,
-            bio: localized(row.speaker_bio, row.speaker_bio_en),
+            bio: richText(row.speaker_bio, row.speaker_bio_en),
             location: localized(row.speaker_location_fr, row.speaker_location),
             photo: null,
           },
         ]
       : [],
     moderator: null,
-    intro: localized(row.intro_text, row.intro_text_en),
-    description: localized(row.description, row.description_en),
+    intro: richText(row.intro_text, row.intro_text_en),
+    description: richText(row.description, row.description_en),
     image: image(row),
     tags: tags(row),
     language: text(row.language)?.toLowerCase() ?? null,
@@ -135,8 +168,8 @@ function fromByNight(row: ByNightRow): FestivalEvent | null {
     venue: venue(row.room_name, row.venue),
     speakers: [],
     moderator: null,
-    intro: localized(row.intro_text, row.intro_text_en),
-    description: localized(row.description, row.description_en),
+    intro: richText(row.intro_text, row.intro_text_en),
+    description: richText(row.description, row.description_en),
     image: image(row),
     tags: tags(row),
     language: null,
@@ -158,8 +191,8 @@ function fromPanel(row: PanelRow): FestivalEvent | null {
     venue: venue(row.room_name, row.location),
     speakers: (row.speakers ?? []).map(panelPerson).filter((p): p is Person => p !== null),
     moderator: panelPerson(row.moderator),
-    intro: localized(row.intro_text, row.intro_text_en),
-    description: localized(row.description, row.description_en),
+    intro: richText(row.intro_text, row.intro_text_en),
+    description: richText(row.description, row.description_en),
     image: image(row),
     tags: tags(row),
     language: text(row.language)?.toLowerCase() ?? null,

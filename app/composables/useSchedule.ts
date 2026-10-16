@@ -8,8 +8,8 @@ export function useSchedule() {
       events: response.events.map((event): TimetableEvent => ({
         id: event.id,
         kind: event.kind,
+        slug: event.slug,
         title: event.title,
-        url: event.url,
         date: event.date,
         start: event.start,
         end: event.end,

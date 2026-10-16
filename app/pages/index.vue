@@ -38,6 +38,23 @@ const selectedBuilding = computed(
   () => VENUE_FILTERS.find((venue) => venue.key === selectedVenue.value)?.building,
 );
 
+// Restore the scroll position when coming back from an event page.
+const scroller = useTemplateRef<HTMLElement>("scroller");
+const savedScroll = useState<{ key: string; top: number; left: number } | null>(
+  "timetable-scroll",
+  () => null,
+);
+const scrollKey = computed(() => `${selectedDay.value}|${selectedVenue.value}`);
+onBeforeUnmount(() => {
+  if (!scroller.value) return;
+  const { scrollTop: top, scrollLeft: left } = scroller.value;
+  savedScroll.value = { key: scrollKey.value, top, left };
+});
+onMounted(() => {
+  const saved = savedScroll.value;
+  if (saved?.key === scrollKey.value) scroller.value?.scrollTo(saved.left, saved.top);
+});
+
 const updatedAt = computed(() =>
   data.value
     ? new Intl.DateTimeFormat("en-GB", {
@@ -114,7 +131,7 @@ useHead({ title: "KIKK 2026 Timetable" });
       </nav>
     </header>
 
-    <main class="min-h-0 flex-1 overflow-auto overscroll-contain">
+    <main ref="scroller" class="min-h-0 flex-1 overflow-auto overscroll-contain">
       <p v-if="error && !data" class="p-4 text-neutral-500">
         The schedule couldn't be loaded. Please try again later.
       </p>

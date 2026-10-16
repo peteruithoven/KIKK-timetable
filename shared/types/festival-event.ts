@@ -1,6 +1,6 @@
 export type EventKind = "talk" | "panel" | "party";
 
-/** Text in both festival languages. Values can contain HTML. */
+/** Text in both festival languages. Bios, intros and descriptions are sanitized HTML. */
 export interface Localized {
   fr: string | null;
   en: string | null;

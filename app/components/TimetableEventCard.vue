@@ -20,10 +20,8 @@ const titleStyle = computed(() => {
 </script>
 
 <template>
-  <a
-    :href="event.url"
-    target="_blank"
-    rel="noopener"
+  <NuxtLink
+    :to="eventPath(event)"
     :title="`${event.start}${event.end ? `–${event.end}` : ''} · ${event.title}`"
     class="absolute flex clip-corner flex-col overflow-hidden bg-block transition-colors hover:bg-ink hover:text-paper focus-visible:bg-ink focus-visible:text-paper focus-visible:outline-none"
     :style="{ height: `${height}px` }"
@@ -42,5 +40,5 @@ const titleStyle = computed(() => {
       decoding="async"
       class="min-h-0 w-full flex-1 object-cover"
     />
-  </a>
+  </NuxtLink>
 </template>
