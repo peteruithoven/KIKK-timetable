@@ -49,7 +49,7 @@ useSeoMeta({
   title: () => `${event.value?.title} · KIKK 2026`,
   ogTitle: () => event.value?.title,
   description: () => plainText(intro.value?.text ?? description.value?.text),
-  ogImage: () => (event.value?.image ? resizedImage(event.value.image, 1200) : undefined),
+  ...ogImageMeta(() => event.value?.image),
 });
 </script>
 

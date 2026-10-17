@@ -52,8 +52,7 @@ useSeoMeta({
   title: () => `${installation.value?.title} · KIKK 2026`,
   ogTitle: () => installation.value?.title,
   description: () => plainText(intro.value?.text ?? description.value?.text),
-  ogImage: () =>
-    installation.value?.heroImage ? resizedImage(installation.value.heroImage, 1200) : undefined,
+  ...ogImageMeta(() => installation.value?.heroImage),
 });
 </script>
 

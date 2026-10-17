@@ -133,3 +133,19 @@ export function resizedImage(url: string, width: number): string {
   const resized = url.replace(original, "/storage/v1/render/image/public/");
   return `${resized}?width=${width}&quality=75&resize=cover`;
 }
+
+/**
+ * Link preview image meta for `useSeoMeta`, for an event or artwork image. Without an image,
+ * app.vue's default card stays. Its size is cleared (null), the resized image's height is unknown.
+ */
+export function ogImageMeta(image: () => string | null | undefined) {
+  const width = 1200;
+  return {
+    ogImage: () => {
+      const url = image();
+      return url ? resizedImage(url, width) : undefined;
+    },
+    ogImageWidth: () => (image() ? width : undefined),
+    ogImageHeight: () => (image() ? null : undefined),
+  };
+}
