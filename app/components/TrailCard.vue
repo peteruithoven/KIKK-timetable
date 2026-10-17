@@ -1,5 +1,8 @@
 <script setup lang="ts">
-defineProps<{ item: TrailItem }>();
+const props = defineProps<{ item: TrailItem }>();
+
+const { isFavorite } = useFavorites();
+const favorite = computed(() => isFavorite(props.item.id));
 </script>
 
 <template>
@@ -17,6 +20,10 @@ defineProps<{ item: TrailItem }>();
     <span
       class="mt-2 block font-display leading-tight font-bold text-balance wrap-break-word hyphens-auto uppercase group-hover:underline"
     >
+      <template v-if="favorite">
+        <Icon name="material-symbols:star" class="mr-0.5 size-4 align-[-2px]" aria-hidden="true" />
+        <span class="sr-only">Favorite: </span>
+      </template>
       {{ item.title }}
     </span>
     <span v-if="item.artist" class="mt-0.5 block text-sm text-neutral-500">{{ item.artist }}</span>

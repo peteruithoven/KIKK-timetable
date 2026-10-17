@@ -10,17 +10,19 @@ if (!list.value) {
     fatal: true,
   });
 }
-const { data: schedule } = await useSchedule();
+const [{ data: schedule }, { data: trail }] = await Promise.all([useSchedule(), useTrail()]);
 const favorites = useFavorites();
 
 const isOwn = computed(() => favorites.listId.value === id);
 // This device's latest state for its own list, including unsaved changes.
-const eventIds = computed(() => new Set(isOwn.value ? favorites.events.value : list.value?.events));
+const favoriteIds = computed(
+  () => new Set(isOwn.value ? favorites.events.value : list.value?.events),
+);
 
 const days = computed(() => {
   const byDay = new Map<string, TimetableEvent[]>();
   for (const event of schedule.value?.events ?? []) {
-    if (eventIds.value.has(event.id))
+    if (favoriteIds.value.has(event.id))
       byDay.set(event.date, [...(byDay.get(event.date) ?? []), event]);
   }
   return [...byDay]
@@ -30,6 +32,10 @@ const days = computed(() => {
       events: events.sort((a, b) => (a.start ?? "").localeCompare(b.start ?? "")),
     }));
 });
+
+const installations = computed(
+  () => trail.value?.installations.filter((item) => favoriteIds.value.has(item.id)) ?? [],
+);
 
 // Behind the reverse proxy the app itself is reached over plain http.
 const origin = useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin;
@@ -142,6 +148,9 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
           Subscribe to {{ isOwn ? "your" : "these" }} favorites in your calendar app. It stays up to
           date: new favorites and schedule changes show up by themselves. Calendar apps check for
           changes every few hours, Google Calendar can take up to a day.
+          <template v-if="installations.length">
+            Art trail works aren't included, they have no set times.
+          </template>
         </p>
         <div class="mt-4 flex flex-wrap gap-2">
           <a
@@ -170,8 +179,9 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
         </div>
       </section>
 
-      <p v-if="days.length === 0" class="mt-8 text-neutral-500">
-        No favorites yet. Open an event in the timetable and add it to your favorites.
+      <p v-if="days.length === 0 && installations.length === 0" class="mt-8 text-neutral-500">
+        No favorites yet. Open an event in the timetable or a work on the art trail and add it to
+        your favorites.
       </p>
       <section v-for="day in days" :key="day.date" class="mt-8">
         <h2 class="font-display text-lg font-bold">
@@ -192,6 +202,35 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
                 </span>
                 <span v-if="event.venue" class="mt-0.5 block text-xs text-neutral-500">
                   {{ event.venue }}
+                </span>
+              </span>
+            </NuxtLink>
+          </li>
+        </ul>
+      </section>
+      <section v-if="installations.length" class="mt-8">
+        <h2 class="font-display text-lg font-bold">Art trail</h2>
+        <ul class="mt-2 border-t border-ink">
+          <li v-for="item in installations" :key="item.id" class="border-b border-line">
+            <NuxtLink
+              :to="installationPath(item)"
+              class="flex items-center gap-4 py-3 transition-colors hover:bg-block"
+            >
+              <img
+                v-if="item.image"
+                :src="resizedImage(item.image, 96)"
+                crossorigin="anonymous"
+                alt=""
+                loading="lazy"
+                class="size-12 shrink-0 bg-block object-cover"
+              />
+              <span v-else class="size-12 shrink-0 bg-block" />
+              <span class="min-w-0">
+                <span class="block font-display leading-tight font-semibold">
+                  {{ item.title }}
+                </span>
+                <span class="mt-0.5 block text-xs text-neutral-500">
+                  {{ [item.artist, item.venue].filter(Boolean).join(" · ") }}
                 </span>
               </span>
             </NuxtLink>

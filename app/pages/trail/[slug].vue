@@ -69,6 +69,7 @@ useSeoMeta({
       >
         <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Art trail
       </a>
+      <FavoriteButton :id="installation.id" />
     </nav>
 
     <img

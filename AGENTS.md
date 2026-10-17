@@ -68,7 +68,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 
 ## Art trail
 
-- `/trail` and `/trail/<slug>`, backed by `/api/trail` and `/api/trail/<slug>`. Installations aren't timed, so they're their own type (`shared/types/installation.ts`), not a `FestivalEvent` kind, and can't be favorites. Slugs are Kikk's without the `-art-trail-kikk2026` suffix.
+- `/trail` and `/trail/<slug>`, backed by `/api/trail` and `/api/trail/<slug>`. Installations aren't timed, so they're their own type (`shared/types/installation.ts`), not a `FestivalEvent` kind. They can be favorites, but aren't in the calendar. Slugs are Kikk's without the `-art-trail-kikk2026` suffix.
 - Two sources, fetched by `fetchTrailData()`: Kikk's `installations` table (texts in both languages, images, links; its `location` is mostly the artist's country) and the Supabase project of Kikk's art trail app exhibitions.kikkfestival.be (`NUXT_TRAIL_SUPABASE_URL` / `_KEY`, public anon key from that app's bundle): `entries`, `locations` and `artists`, for the place, year, materials, portrait and properly cased artist names. Rows are matched on title, loosely, as titles differ ("LADDER", "L'échelle - Ladder"); see `findByName()` in `kikk-mapping.ts`.
 - `kikk-cache.ts` caches it separately from the schedule (`kikk:trail`, fallback `server/assets/trail-snapshot.json`, also written by `vp run snapshot`), so a broken trail source never blocks schedule updates.
 - The overview groups works by place, north to south.
@@ -77,7 +77,8 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 
 - No accounts. Lists live in Nitro storage as `favorites:<id>` (ids like `brave-otter-4821`), via `/api/lists`. The id is the share link (`/list/<id>`) and gives edit access.
 - The server sets the `kikk-list` cookie (server-set cookies survive Safari's 7 day cleanup). `app/plugins/favorites.ts` loads the list during SSR. `useFavorites` updates optimistically, queues unsaved changes and keeps a localStorage backup that can recreate the list.
-- Stored lists keep a `paths` map (event id to `kind/slug`) so favorites follow events Kikk re-creates under a new id. It's internal, the API doesn't return it.
+- A list's `events` holds both event and installation ids (`installation:uuid`); the name predates installations.
+- Stored lists keep a `paths` map (event id to `kind/slug`, installation id to `trail/slug`) so favorites follow events Kikk re-creates under a new id. It's internal, the API doesn't return it.
 - `/api/lists/<id>/calendar.ics` is a subscribable calendar (`server/utils/ical.ts`).
 
 ## Offline / PWA

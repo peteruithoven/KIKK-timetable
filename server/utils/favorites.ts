@@ -1,7 +1,7 @@
 import type { H3Event } from "h3";
 
 const MAX_EVENTS = 300;
-const EVENT_ID_PATTERN = /^(talk|panel|party):[0-9a-f-]{36}$/;
+const FAVORITE_ID_PATTERN = /^(talk|panel|party|installation):[0-9a-f-]{36}$/;
 const COOKIE_MAX_AGE = 400 * 24 * 60 * 60; // The maximum browsers allow.
 
 // prettier-ignore
@@ -47,20 +47,28 @@ async function createListId(): Promise<string> {
 }
 
 /**
- * As stored. `paths` links each favorite to its `kind/slug`, so a favorite can be found again
- * when Kikk deletes and re-creates an event under a new id.
+ * As stored. `paths` links each favorite to its `kind/slug` (`trail/slug` for installations), so
+ * a favorite can be found again when Kikk deletes and re-creates it under a new id.
  */
 interface StoredList extends FavoritesList {
   paths?: Record<string, string>;
 }
 
-const eventPath = (event: Pick<FestivalEvent, "kind" | "slug">) => `${event.kind}/${event.slug}`;
-
-/** Links favorites to the current schedule: follows re-created events by slug and fills in slugs. */
+/**
+ * Links favorites to the current schedule and art trail: follows re-created events and
+ * installations by slug and fills in slugs.
+ */
 async function reconcile(event: H3Event, list: StoredList): Promise<StoredList> {
-  const { events } = await getFestivalEvents(event);
-  const byId = new Map(events.map((e) => [e.id, e]));
-  const byPath = new Map(events.map((e) => [eventPath(e), e]));
+  const [{ events }, { installations }] = await Promise.all([
+    getFestivalEvents(event),
+    getInstallations(event),
+  ]);
+  const items = [
+    ...events.map((e) => ({ id: e.id, path: `${e.kind}/${e.slug}` })),
+    ...installations.map((i) => ({ id: i.id, path: `trail/${i.slug}` })),
+  ];
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const byPath = new Map(items.map((item) => [item.path, item]));
   const ids = new Set<string>();
   const paths: Record<string, string> = {};
   for (const id of list.events) {
@@ -68,9 +76,9 @@ async function reconcile(event: H3Event, list: StoredList): Promise<StoredList> 
     const current = byId.get(id) ?? (path ? byPath.get(path) : undefined);
     if (current) {
       ids.add(current.id);
-      paths[current.id] = eventPath(current);
+      paths[current.id] = current.path;
     } else {
-      // Not in the schedule (anymore). Kept, in case it returns.
+      // Not in the schedule or art trail (anymore). Kept, in case it returns.
       ids.add(id);
       if (path) paths[id] = path;
     }
@@ -147,17 +155,17 @@ export function parseListId(value: unknown): string {
 
 export function parseChanges(body: unknown): ListChanges {
   const { add, remove } = (body ?? {}) as Record<string, unknown>;
-  return { add: parseEventIds(add), remove: parseEventIds(remove) };
+  return { add: parseFavoriteIds(add), remove: parseFavoriteIds(remove) };
 }
 
-function parseEventIds(value: unknown): string[] {
+function parseFavoriteIds(value: unknown): string[] {
   if (value === undefined) return [];
   if (
     !Array.isArray(value) ||
     value.length > MAX_EVENTS ||
-    !value.every((id) => typeof id === "string" && EVENT_ID_PATTERN.test(id))
+    !value.every((id) => typeof id === "string" && FAVORITE_ID_PATTERN.test(id))
   ) {
-    throw createError({ statusCode: 400, statusMessage: "Invalid event ids" });
+    throw createError({ statusCode: 400, statusMessage: "Invalid favorite ids" });
   }
   return value;
 }

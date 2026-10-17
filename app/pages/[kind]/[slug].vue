@@ -13,9 +13,6 @@ if (!event.value) {
   });
 }
 
-const favorites = useFavorites();
-const favorite = computed(() => favorites.isFavorite(event.value!.id));
-
 const venue = computed(() => {
   if (!event.value?.venue) return null;
   const { building, room } = venueParts(event.value.venue);
@@ -68,24 +65,7 @@ useSeoMeta({
       >
         <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Timetable
       </a>
-      <button
-        type="button"
-        :aria-pressed="favorite"
-        class="inline-flex items-center gap-2 bevel-corner border border-ink px-3 py-1.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors"
-        :class="
-          favorite
-            ? 'clip-corner bg-ink text-paper hover:bg-neutral-700'
-            : 'hover:bg-ink hover:text-paper'
-        "
-        @click="favorites.toggle(event.id)"
-      >
-        <Icon
-          :name="favorite ? 'material-symbols:star' : 'material-symbols:star-outline'"
-          class="size-5"
-          aria-hidden="true"
-        />
-        {{ favorite ? "Favorite" : "Add to favorites" }}
-      </button>
+      <FavoriteButton :id="event.id" />
     </nav>
 
     <img
