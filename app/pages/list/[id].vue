@@ -5,8 +5,8 @@ const id = String(route.params.id);
 const { data: list, error } = await useFetch<FavoritesList>(`/api/lists/${id}`);
 if (!list.value) {
   throw createError({
-    statusCode: error.value?.statusCode ?? 404,
-    statusMessage: "List not found",
+    status: error.value?.status ?? 404,
+    statusText: "List not found",
     fatal: true,
   });
 }

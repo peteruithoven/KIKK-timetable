@@ -56,7 +56,7 @@ export function useFavorites() {
       });
     } catch (error) {
       // The list is gone on the server, recreate it from what this device knows.
-      if ((error as { statusCode?: number }).statusCode !== 404) throw error;
+      if ((error as { status?: number }).status !== 404) throw error;
       return $fetch<FavoritesList>("/api/lists", {
         method: "POST",
         body: { id: listId.value, add: events.value },

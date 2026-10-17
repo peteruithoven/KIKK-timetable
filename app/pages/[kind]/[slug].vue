@@ -7,8 +7,8 @@ const { data: event, error } = await useFetch<FestivalEvent>(
 );
 if (!event.value) {
   throw createError({
-    statusCode: error.value?.statusCode ?? 404,
-    statusMessage: "Event not found",
+    status: error.value?.status ?? 404,
+    statusText: "Event not found",
     fatal: true,
   });
 }
