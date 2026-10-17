@@ -39,7 +39,11 @@ const titleStyle = computed(() => {
       :style="titleStyle"
     >
       <template v-if="favorite">
-        <span aria-hidden="true">★ </span><span class="sr-only">Favorite: </span>
+        <Icon
+          name="material-symbols:star"
+          class="mr-0.5 size-3.5 align-[-2px]"
+          aria-hidden="true"
+        /><span class="sr-only">Favorite: </span>
       </template>
       {{ event.title }}
     </span>

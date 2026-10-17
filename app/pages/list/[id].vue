@@ -65,7 +65,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
         to="/"
         class="inline-flex items-center gap-2 border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
       >
-        <span aria-hidden="true">←</span> Timetable
+        <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Timetable
       </NuxtLink>
     </nav>
 

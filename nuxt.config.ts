@@ -4,6 +4,13 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-16",
   devtools: { enabled: true },
+  modules: ["@nuxt/icon"],
+  icon: {
+    // Icon sets come from installed @iconify-json/* packages, never the public Iconify API.
+    serverBundle: "local",
+    clientBundle: { scan: true },
+    fallbackToApi: false,
+  },
   css: [
     // The fonts kikkfestival.be uses, served by the app itself.
     "@fontsource-variable/inter-tight/wght.css",

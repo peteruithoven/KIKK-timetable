@@ -103,17 +103,12 @@ useHead({ title: "KIKK 2026 Timetable" });
               {{ venue.building }}
             </option>
           </select>
-          <svg
-            class="pointer-events-none absolute top-1/2 right-3 size-3 -translate-y-1/2"
+          <Icon
+            name="material-symbols:keyboard-arrow-down"
+            class="pointer-events-none absolute top-1/2 right-2 size-5 -translate-y-1/2"
             :class="selectedVenue === 'all' ? 'text-ink' : 'text-paper'"
-            viewBox="0 0 12 12"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
             aria-hidden="true"
-          >
-            <path d="M2 4l4 4 4-4" />
-          </svg>
+          />
         </label>
       </div>
       <div class="mt-3 flex items-end justify-between gap-2">
@@ -135,9 +130,10 @@ useHead({ title: "KIKK 2026 Timetable" });
         <NuxtLink
           v-if="favoritesListId"
           :to="listPath(favoritesListId)"
-          class="shrink-0 border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+          class="inline-flex shrink-0 items-center gap-1.5 border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
         >
-          <span aria-hidden="true">★</span> Favorites
+          <Icon name="material-symbols:star-outline" class="size-4" aria-hidden="true" />
+          Favorites
           <span class="text-neutral-500 tabular-nums">{{ favoriteEvents.length }}</span>
         </NuxtLink>
       </div>

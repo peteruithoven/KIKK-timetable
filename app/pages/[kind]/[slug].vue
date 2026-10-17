@@ -73,7 +73,7 @@ useSeoMeta({
         class="inline-flex items-center gap-2 border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
         @click="goBack"
       >
-        <span aria-hidden="true">←</span> Timetable
+        <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Timetable
       </a>
       <button
         type="button"
@@ -86,7 +86,11 @@ useSeoMeta({
         "
         @click="favorites.toggle(event.id)"
       >
-        <span aria-hidden="true">{{ favorite ? "★" : "☆" }}</span>
+        <Icon
+          :name="favorite ? 'material-symbols:star' : 'material-symbols:star-outline'"
+          class="size-5"
+          aria-hidden="true"
+        />
         {{ favorite ? "Favorite" : "Add to favorites" }}
       </button>
     </nav>
@@ -153,18 +157,19 @@ useSeoMeta({
           :href="event.url"
           target="_blank"
           rel="noopener"
-          class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+          class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
         >
-          More on kikkfestival.be <span aria-hidden="true">↗</span>
+          More on kikkfestival.be
+          <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
         </a>
         <a
           v-if="event.ticketUrl"
           :href="event.ticketUrl"
           target="_blank"
           rel="noopener"
-          class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+          class="inline-flex items-center gap-1.5 border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
         >
-          Tickets <span aria-hidden="true">↗</span>
+          Tickets <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
         </a>
       </div>
 
