@@ -113,8 +113,18 @@ function timing(date: string, startTime: string | null, endTime: string | null) 
   };
 }
 
-function image(row: ConferenceRow | ByNightRow | PanelRow): string | null {
-  return text(row.image_url) ?? text(row.gallery_images?.[0]) ?? text(row.hero_image_url);
+function images(row: ConferenceRow | ByNightRow | PanelRow) {
+  const image = text(row.image_url) ?? text(row.gallery_images?.[0]) ?? text(row.hero_image_url);
+  return {
+    image,
+    gallery: gallery(row.gallery_images, image),
+    credit: text(row.carousel_credit),
+  };
+}
+
+/** Without the image the page already shows on top. */
+function gallery(urls: string[] | null, shown: string | null): string[] {
+  return (urls ?? []).map(text).filter((url): url is string => url !== null && url !== shown);
 }
 
 function tags(row: { tags: string[] | null }): string[] {
@@ -161,7 +171,7 @@ function fromConference(row: ConferenceRow): FestivalEvent | null {
     moderator: null,
     intro: richText(row.intro_text, row.intro_text_en),
     description: richText(row.description, row.description_en),
-    image: image(row),
+    ...images(row),
     tags: tags(row),
     language: text(row.language)?.toLowerCase() ?? null,
     websiteUrl: text(row.website_url),
@@ -185,7 +195,7 @@ function fromByNight(row: ByNightRow): FestivalEvent | null {
     moderator: null,
     intro: richText(row.intro_text, row.intro_text_en),
     description: richText(row.description, row.description_en),
-    image: image(row),
+    ...images(row),
     tags: tags(row),
     language: null,
     websiteUrl: text(row.website_url),
@@ -208,7 +218,7 @@ function fromPanel(row: PanelRow): FestivalEvent | null {
     moderator: panelPerson(row.moderator),
     intro: richText(row.intro_text, row.intro_text_en),
     description: richText(row.description, row.description_en),
-    image: image(row),
+    ...images(row),
     tags: tags(row),
     language: text(row.language)?.toLowerCase() ?? null,
     websiteUrl: null,
@@ -306,9 +316,7 @@ function fromInstallation(row: InstallationRow, trail: TrailData): Installation 
     description: richText(row.description, row.description_en),
     image: text(row.image_url) ?? heroImage,
     heroImage,
-    gallery: (row.gallery_images ?? [])
-      .map(text)
-      .filter((url): url is string => url !== null && url !== heroImage),
+    gallery: gallery(row.gallery_images, heroImage),
     credit: text(row.carousel_credit),
     tags: tags(row),
     websiteUrl: text(row.website_url),

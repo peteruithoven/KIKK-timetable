@@ -33,6 +33,7 @@ interface BaseRow {
   image_url: string;
   hero_image_url: string;
   gallery_images: string[];
+  carousel_credit: string;
   tags: string[];
 }
 

@@ -171,6 +171,7 @@ useSeoMeta({
           v-html="description.text"
         />
       </EventSection>
+      <EventGallery :images="event.gallery" :credit="event.credit" />
       <EventSection v-if="event.speakers.length" :label="speakersLabel">
         <div class="flex flex-col gap-8">
           <EventPerson v-for="person in event.speakers" :key="person.name" :person="person" />

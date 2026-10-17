@@ -40,6 +40,10 @@ export interface FestivalEvent {
   intro: Localized | null;
   description: Localized | null;
   image: string | null;
+  /** Without `image`. */
+  gallery: string[];
+  /** Of the gallery photos. */
+  credit: string | null;
   tags: string[];
   language: string | null;
   websiteUrl: string | null;

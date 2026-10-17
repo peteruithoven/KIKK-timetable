@@ -169,27 +169,7 @@ useSeoMeta({
           v-html="description.text"
         />
       </EventSection>
-      <EventSection v-if="installation.gallery.length" label="Gallery">
-        <ul
-          class="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 sm:mx-0 sm:scroll-px-0 sm:px-0"
-        >
-          <li v-for="url in installation.gallery" :key="url" class="shrink-0 snap-start">
-            <a :href="url" target="_blank" rel="noopener" class="block">
-              <img
-                :src="resizedImage(url, 640)"
-                crossorigin="anonymous"
-                alt=""
-                loading="lazy"
-                decoding="async"
-                class="h-48 w-64 bg-block object-cover sm:h-60 sm:w-80"
-              />
-            </a>
-          </li>
-        </ul>
-        <p v-if="installation.credit" class="mt-2 text-xs text-neutral-500">
-          Photos: {{ installation.credit }}
-        </p>
-      </EventSection>
+      <EventGallery :images="installation.gallery" :credit="installation.credit" />
       <EventSection
         v-if="installation.artist && (installation.artist.bio || installation.artist.photo)"
         label="Artist"
