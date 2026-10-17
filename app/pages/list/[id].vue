@@ -56,7 +56,8 @@ async function adopt() {
   }
 }
 
-useSeoMeta({ title: "Favorites · KIKK 2026" });
+// Lists are personal, and their link gives edit access.
+useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
 </script>
 
 <template>
