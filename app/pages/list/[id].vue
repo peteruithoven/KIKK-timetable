@@ -31,14 +31,21 @@ const days = computed(() => {
     }));
 });
 
-const shareUrl = `${useRequestURL().origin}${listPath(id)}`;
+// Behind the reverse proxy the app itself is reached over plain http.
+const origin = useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin;
+const shareUrl = `${origin}${listPath(id)}`;
+// Calendar apps subscribe to this and check it for changes regularly.
+const calendarUrl = `${origin}/api/lists/${id}/calendar.ics`;
+const webcalUrl = calendarUrl.replace(/^https?:/, "webcal:");
+const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`;
+
 const canShare = ref(false);
 onMounted(() => (canShare.value = typeof navigator.share === "function"));
-const copied = ref(false);
-async function copy() {
-  await navigator.clipboard.writeText(shareUrl);
-  copied.value = true;
-  setTimeout(() => (copied.value = false), 2000);
+const copied = ref<string | null>(null);
+async function copy(url: string) {
+  await navigator.clipboard.writeText(url);
+  copied.value = url;
+  setTimeout(() => (copied.value = null), 2000);
 }
 function share() {
   navigator.share({ title: "My KIKK 2026 favorites", url: shareUrl }).catch(() => {});
@@ -93,9 +100,9 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
           <button
             type="button"
             class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
-            @click="copy"
+            @click="copy(shareUrl)"
           >
-            {{ copied ? "Copied" : "Copy link" }}
+            {{ copied === shareUrl ? "Copied" : "Copy link" }}
           </button>
           <button
             v-if="canShare"
@@ -127,6 +134,40 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
             {{ listPath(favorites.listId.value) }}</NuxtLink
           >.
         </p>
+      </section>
+
+      <section class="border-b border-line py-5">
+        <h2 class="font-display text-lg font-bold">Add to your calendar</h2>
+        <p class="mt-1 max-w-prose text-sm text-neutral-700">
+          Subscribe to {{ isOwn ? "your" : "these" }} favorites in your calendar app. It stays up to
+          date: new favorites and schedule changes show up by themselves. Calendar apps check for
+          changes every few hours, Google Calendar can take up to a day.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a
+            :href="webcalUrl"
+            class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+          >
+            <Icon name="material-symbols:calendar-add-on" class="size-4" aria-hidden="true" />
+            Subscribe
+          </a>
+          <a
+            :href="googleCalendarUrl"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-1.5 border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+          >
+            Google Calendar
+            <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
+          </a>
+          <button
+            type="button"
+            class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+            @click="copy(calendarUrl)"
+          >
+            {{ copied === calendarUrl ? "Copied" : "Copy calendar link" }}
+          </button>
+        </div>
       </section>
 
       <p v-if="days.length === 0" class="mt-8 text-neutral-500">
