@@ -16,7 +16,7 @@ const buttons = [
       type="button"
       :aria-label="button.label"
       :title="button.label"
-      class="grid size-[29px] place-items-center transition-colors hover:bg-ink hover:text-paper"
+      class="grid size-[29px] place-items-center transition-colors hover:bg-ink hover:text-paper hover:inset-ring hover:inset-ring-paper"
       @click="button.action"
     >
       <Icon :name="button.icon" class="size-5" aria-hidden="true" />
