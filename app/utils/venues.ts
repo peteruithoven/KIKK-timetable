@@ -21,3 +21,10 @@ export const VENUES: Venue[] = [
   { key: "beffroi", name: "Le Beffroi", coordinates: [4.867046, 50.463884] },
   { key: "pavillon", name: "Le Pavillon", coordinates: [4.858922, 50.457431] },
 ];
+
+/** `"La Bourse — Auditoire Rops"` → `"/map?venue=bourse"`, null for places not on the map. */
+export function venueMapPath(venue: string): string | null {
+  const { building, room } = venueParts(venue);
+  const key = VENUES.find((place) => place.name === (building ?? room))?.key;
+  return key ? `/map?venue=${key}` : null;
+}

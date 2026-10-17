@@ -10,6 +10,7 @@ const PX_PER_MINUTE = 2;
 const pxPerMinute = computed(() => PX_PER_MINUTE * (props.zoom ?? 1));
 const TIME_COLUMN = "3.5rem";
 const VENUE_COLUMN = "10rem";
+const NuxtLink = resolveComponent("NuxtLink");
 
 const height = computed(() => props.timetable.length * pxPerMinute.value);
 
@@ -113,10 +114,14 @@ const nowTop = computed(() => {
       </span>
       <span class="font-display text-lg font-bold">{{ formatDay(date, { day: "numeric" }) }}</span>
     </div>
-    <div
+    <!-- Venue names link to the venue on the map. -->
+    <component
+      :is="venueMapPath(venue.name) ? NuxtLink : 'div'"
       v-for="venue in timetable.venues"
       :key="venue.name"
-      class="sticky top-0 z-20 flex flex-col justify-center border-b border-l border-b-ink border-l-line bg-paper px-2 py-2 text-center"
+      :to="venueMapPath(venue.name) ?? undefined"
+      class="sticky top-0 z-20 flex flex-col justify-center border-b border-l border-b-ink border-l-line bg-paper px-2 py-2 text-center transition-colors"
+      :class="{ 'hover:bg-block': venueMapPath(venue.name) }"
     >
       <span
         v-if="venueParts(venue.name).building"
@@ -127,7 +132,7 @@ const nowTop = computed(() => {
       <span class="truncate font-display text-sm font-bold">
         {{ venueParts(venue.name).room }}
       </span>
-    </div>
+    </component>
 
     <!-- Explicit grid positions, so the favorites layer below can overlap the columns. -->
     <div

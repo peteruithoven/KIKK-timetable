@@ -19,7 +19,8 @@ const favorite = computed(() => favorites.isFavorite(event.value!.id));
 const venue = computed(() => {
   if (!event.value?.venue) return null;
   const { building, room } = venueParts(event.value.venue);
-  return building ? { name: building, room } : { name: room, room: null };
+  const mapPath = venueMapPath(event.value.venue);
+  return building ? { name: building, room, mapPath } : { name: room, room: null, mapPath };
 });
 
 const time = computed(() => [event.value?.start, event.value?.end].filter(Boolean).join(" – "));
@@ -145,7 +146,16 @@ useSeoMeta({
         </div>
         <div v-if="venue">
           <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Venue</dt>
-          <dd class="mt-1 font-display font-bold">{{ venue.name }}</dd>
+          <dd class="mt-1 font-display font-bold">
+            <NuxtLink
+              v-if="venue.mapPath"
+              :to="venue.mapPath"
+              class="underline decoration-line underline-offset-4 transition-colors hover:decoration-ink"
+            >
+              {{ venue.name }}
+            </NuxtLink>
+            <template v-else>{{ venue.name }}</template>
+          </dd>
         </div>
         <div v-if="venue?.room">
           <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Room</dt>

@@ -85,7 +85,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - Icons: `<Icon name="material-symbols:…">` from the locally installed `@iconify-json/material-symbols`. The Iconify API fallback is off, so install the `@iconify-json/*` package before using another set, then restart the dev server.
 - Timetable: everything scales with `pxPerMinute` (pinch zoom, `useVerticalZoom`). The body cells of the grid have explicit grid positions so the favorites bar layer can overlap them. Favorite bars are sticky, positioned with a spacer (a margin can't move out of a sticky container), and shown only when their block is out of view (IntersectionObserver).
 - Map (`/map`): MapLibre with OpenFreeMap's dark style, loaded client-side only. Its worker URL is set with `setWorkerUrl` from a `?url` import; MapLibre's own runtime URL breaks in Vite (dev pre-bundling and production build).
-- Venues on the map: hardcoded in `app/utils/venues.ts` (coordinates from kikkfestival.be/map), drawn as a symbol layer by `app/utils/map-layers.ts`. `/map?venue=<key>` highlights one by dimming the others, without moving the view.
+- Venues on the map: hardcoded in `app/utils/venues.ts` (coordinates from kikkfestival.be/map), drawn as a symbol layer by `app/utils/map-layers.ts`. `/map?venue=<key>` highlights one by dimming the others, without moving the view. Timetable column headers and event pages link there via `venueMapPath()`.
 - `public/favicon.svg` was edited after RealFaviconGenerator: no dark-mode invert (it made the Firefox Android home screen icon white on white).
 
 ## Gotchas
