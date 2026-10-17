@@ -2,18 +2,21 @@
 const props = defineProps<{
   date: string;
   timetable: DayTimetable;
+  /** Vertical zoom, see useVerticalZoom. */
+  zoom?: number;
 }>();
 
 const PX_PER_MINUTE = 2;
+const pxPerMinute = computed(() => PX_PER_MINUTE * (props.zoom ?? 1));
 const TIME_COLUMN = "3.5rem";
 const VENUE_COLUMN = "10rem";
 
-const height = computed(() => props.timetable.length * PX_PER_MINUTE);
+const height = computed(() => props.timetable.length * pxPerMinute.value);
 
 const hours = computed(() => {
   const { startMinute, length } = props.timetable;
   return Array.from({ length: length / 60 }, (_, i) => ({
-    top: i * 60 * PX_PER_MINUTE,
+    top: i * 60 * pxPerMinute.value,
     label: `${String((startMinute / 60 + i) % 24).padStart(2, "0")}:00`,
   }));
 });
@@ -30,8 +33,8 @@ const gridStyle = computed(() => {
 const columnStyle = computed(() => ({
   height: `${height.value}px`,
   backgroundImage: [
-    `repeating-linear-gradient(to bottom, var(--color-line) 0 1px, transparent 1px ${60 * PX_PER_MINUTE}px)`,
-    `repeating-linear-gradient(to bottom, var(--color-line-faint) 0 1px, transparent 1px ${30 * PX_PER_MINUTE}px)`,
+    `repeating-linear-gradient(to bottom, var(--color-line) 0 1px, transparent 1px ${60 * pxPerMinute.value}px)`,
+    `repeating-linear-gradient(to bottom, var(--color-line-faint) 0 1px, transparent 1px ${30 * pxPerMinute.value}px)`,
   ].join(", "),
 }));
 
@@ -48,7 +51,7 @@ const nowTop = computed(() => {
   const { startsAt, length } = props.timetable;
   if (now.value === null || startsAt === null) return null;
   const minutes = (now.value - startsAt) / 60_000;
-  return minutes >= 0 && minutes <= length ? minutes * PX_PER_MINUTE : null;
+  return minutes >= 0 && minutes <= length ? minutes * pxPerMinute.value : null;
 });
 </script>
 
@@ -78,7 +81,7 @@ const nowTop = computed(() => {
       </span>
     </div>
 
-    <div class="sticky left-0 z-10 bg-paper" :style="{ height: `${height}px` }">
+    <div data-timeline class="sticky left-0 z-10 bg-paper" :style="{ height: `${height}px` }">
       <span
         v-for="hour in hours"
         :key="hour.label"
@@ -98,9 +101,9 @@ const nowTop = computed(() => {
         v-for="placed in venue.events"
         :key="placed.event.id"
         :event="placed.event"
-        :height="placed.duration * PX_PER_MINUTE - 2"
+        :height="placed.duration * pxPerMinute - 2"
         :style="{
-          top: `${placed.top * PX_PER_MINUTE + 1}px`,
+          top: `${placed.top * pxPerMinute + 1}px`,
           left: `calc(${(placed.lane / placed.lanes) * 100}% + 2px)`,
           width: `calc(${100 / placed.lanes}% - 4px)`,
         }"

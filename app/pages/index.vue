@@ -43,6 +43,9 @@ const online = useOnline();
 
 // Restore the scroll position when coming back from an event page.
 const scroller = useTemplateRef<HTMLElement>("scroller");
+// Pinch to stretch time vertically. Registered first, so its remembered zoom is set before
+// the scroll position is restored below.
+const zoom = useVerticalZoom(scroller);
 const savedScroll = useState<{ key: string; top: number; left: number } | null>(
   "timetable-scroll",
   () => null,
@@ -53,9 +56,11 @@ onBeforeUnmount(() => {
   const { scrollTop: top, scrollLeft: left } = scroller.value;
   savedScroll.value = { key: scrollKey.value, top, left };
 });
-onMounted(() => {
+onMounted(async () => {
   const saved = savedScroll.value;
-  if (saved?.key === scrollKey.value) scroller.value?.scrollTo(saved.left, saved.top);
+  if (saved?.key !== scrollKey.value) return;
+  await nextTick();
+  scroller.value?.scrollTo(saved.left, saved.top);
 });
 
 const updatedAt = computed(() =>
@@ -140,7 +145,10 @@ useHead({ title: "KIKK 2026 Timetable" });
       </div>
     </header>
 
-    <main ref="scroller" class="min-h-0 flex-1 overflow-auto overscroll-contain">
+    <main
+      ref="scroller"
+      class="min-h-0 flex-1 touch-pan-x touch-pan-y overflow-auto overscroll-contain"
+    >
       <p v-if="error && !data" class="p-4 text-neutral-500">
         The schedule couldn't be loaded. Please try again later.
       </p>
@@ -148,7 +156,12 @@ useHead({ title: "KIKK 2026 Timetable" });
         Nothing at {{ selectedBuilding }} on
         {{ formatDay(selectedDay, { weekday: "long", day: "numeric", month: "long" }) }}.
       </p>
-      <TimetableGrid v-else-if="selectedDay" :date="selectedDay" :timetable="timetable" />
+      <TimetableGrid
+        v-else-if="selectedDay"
+        :date="selectedDay"
+        :timetable="timetable"
+        :zoom="zoom"
+      />
     </main>
   </div>
 </template>
