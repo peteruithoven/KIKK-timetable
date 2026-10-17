@@ -40,7 +40,7 @@ const titleStyle = computed(() => {
     :style="{ height: `${height}px` }"
   >
     <span
-      class="mx-2 line-clamp-(--lines) shrink-0 pr-1 font-display text-[13px] leading-4 font-semibold text-balance wrap-break-word hyphens-auto group-focus-visible:underline"
+      class="mx-1.5 line-clamp-(--lines) shrink-0 pr-1 font-display text-[13px] leading-4 font-semibold text-balance wrap-break-word hyphens-auto group-focus-visible:underline"
       :class="compact ? 'my-0' : 'my-1'"
       :style="titleStyle"
     >
