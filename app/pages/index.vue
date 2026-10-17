@@ -38,6 +38,8 @@ const selectedBuilding = computed(
   () => VENUE_FILTERS.find((venue) => venue.key === selectedVenue.value)?.building,
 );
 
+const { listId: favoritesListId, events: favoriteEvents } = useFavorites();
+
 // Restore the scroll position when coming back from an event page.
 const scroller = useTemplateRef<HTMLElement>("scroller");
 const savedScroll = useState<{ key: string; top: number; left: number } | null>(
@@ -114,21 +116,31 @@ useHead({ title: "KIKK 2026 Timetable" });
           </svg>
         </label>
       </div>
-      <nav aria-label="Days" class="mt-3 flex gap-2 overflow-x-auto">
+      <div class="mt-3 flex items-end justify-between gap-2">
+        <nav aria-label="Days" class="flex gap-2 overflow-x-auto">
+          <NuxtLink
+            v-for="day in days"
+            :key="day"
+            :to="{ query: { ...route.query, day } }"
+            replace
+            :aria-current="day === selectedDay ? 'date' : undefined"
+            class="flex w-14 shrink-0 flex-col items-center border border-line py-1.5 transition-colors hover:border-ink aria-[current]:clip-corner aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-paper"
+          >
+            <span class="text-[11px] uppercase">{{ formatDay(day, { weekday: "short" }) }}</span>
+            <span class="font-display text-xl leading-none font-bold">
+              {{ formatDay(day, { day: "numeric" }) }}
+            </span>
+          </NuxtLink>
+        </nav>
         <NuxtLink
-          v-for="day in days"
-          :key="day"
-          :to="{ query: { ...route.query, day } }"
-          replace
-          :aria-current="day === selectedDay ? 'date' : undefined"
-          class="flex w-14 shrink-0 flex-col items-center border border-line py-1.5 transition-colors hover:border-ink aria-[current]:clip-corner aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-paper"
+          v-if="favoritesListId"
+          :to="listPath(favoritesListId)"
+          class="shrink-0 border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
         >
-          <span class="text-[11px] uppercase">{{ formatDay(day, { weekday: "short" }) }}</span>
-          <span class="font-display text-xl leading-none font-bold">
-            {{ formatDay(day, { day: "numeric" }) }}
-          </span>
+          <span aria-hidden="true">★</span> Favorites
+          <span class="text-neutral-500 tabular-nums">{{ favoriteEvents.length }}</span>
         </NuxtLink>
-      </nav>
+      </div>
     </header>
 
     <main ref="scroller" class="min-h-0 flex-1 overflow-auto overscroll-contain">

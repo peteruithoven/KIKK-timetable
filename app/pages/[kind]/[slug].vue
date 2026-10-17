@@ -13,6 +13,9 @@ if (!event.value) {
   });
 }
 
+const favorites = useFavorites();
+const favorite = computed(() => favorites.isFavorite(event.value!.id));
+
 const venue = computed(() => {
   if (!event.value?.venue) return null;
   const { building, room } = venueParts(event.value.venue);
@@ -130,11 +133,25 @@ useSeoMeta({
       </dl>
 
       <div class="mt-5 mb-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          :aria-pressed="favorite"
+          class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors"
+          :class="
+            favorite
+              ? 'clip-corner bg-ink text-paper hover:bg-neutral-700'
+              : 'hover:bg-ink hover:text-paper'
+          "
+          @click="favorites.toggle(event.id)"
+        >
+          <span aria-hidden="true">{{ favorite ? "★" : "☆" }}</span>
+          {{ favorite ? "Favorite" : "Add to favorites" }}
+        </button>
         <a
           :href="event.url"
           target="_blank"
           rel="noopener"
-          class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+          class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
         >
           More on kikkfestival.be <span aria-hidden="true">↗</span>
         </a>

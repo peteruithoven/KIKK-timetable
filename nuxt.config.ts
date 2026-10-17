@@ -23,6 +23,12 @@ export default defineNuxtConfig({
     supabaseUrl: "",
     supabaseKey: "",
   },
+  nitro: {
+    storage: {
+      // Favorites and the last fetched schedule. In Docker this is a volume, see compose.yaml.
+      data: { driver: "fsLite", base: "./.data/kv" },
+    },
+  },
   typescript: {
     nodeTsConfig: {
       include: ["../scripts/**/*"],
