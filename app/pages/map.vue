@@ -7,25 +7,26 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 
 const router = useRouter();
 
-// Namur city centre, where the festival venues are.
-const NAMUR: [number, number] = [4.8667, 50.4646];
-
 const container = useTemplateRef<HTMLDivElement>("container");
 let map: MapLibreMap | undefined;
 
 onMounted(async () => {
   // MapLibre needs WebGL and the DOM, and it's big, so it's only loaded on this page.
-  const { Map, setWorkerUrl } = await import("maplibre-gl");
+  const { Map, LngLatBounds, setWorkerUrl } = await import("maplibre-gl");
   if (!container.value) return;
   setWorkerUrl(workerUrl);
-  map = new Map({
+  const bounds = new LngLatBounds();
+  for (const venue of VENUES) bounds.extend(venue.coordinates);
+  const instance = new Map({
     container: container.value,
     style: "https://tiles.openfreemap.org/styles/dark",
-    center: NAMUR,
-    zoom: 14,
+    bounds,
+    fitBoundsOptions: { padding: 48 },
     // The full text instead of an info button.
     attributionControl: { compact: false },
   });
+  instance.once("load", () => addVenueLayer(instance));
+  map = instance;
 });
 
 onBeforeUnmount(() => map?.remove());
