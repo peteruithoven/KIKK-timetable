@@ -45,18 +45,6 @@ const calendarUrl = `${origin}/api/lists/${id}/calendar.ics`;
 const webcalUrl = calendarUrl.replace(/^https?:/, "webcal:");
 const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`;
 
-const canShare = ref(false);
-onMounted(() => (canShare.value = typeof navigator.share === "function"));
-const copied = ref<string | null>(null);
-async function copy(url: string) {
-  await navigator.clipboard.writeText(url);
-  copied.value = url;
-  setTimeout(() => (copied.value = null), 2000);
-}
-function share() {
-  navigator.share({ title: "My KIKK 2026 favorites", url: shareUrl }).catch(() => {});
-}
-
 const adopting = ref(false);
 async function adopt() {
   adopting.value = true;
@@ -103,21 +91,8 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
             class="min-w-0 flex-1 basis-60 border border-line px-3 py-2 text-sm"
             @focus="($event.target as HTMLInputElement).select()"
           />
-          <button
-            type="button"
-            class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
-            @click="copy(shareUrl)"
-          >
-            {{ copied === shareUrl ? "Copied" : "Copy link" }}
-          </button>
-          <button
-            v-if="canShare"
-            type="button"
-            class="bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
-            @click="share"
-          >
-            Share
-          </button>
+          <ShareButton :url="shareUrl" title="My KIKK 2026 favorites" />
+          <CopyButton :value="shareUrl" />
         </div>
       </section>
 
@@ -169,13 +144,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
             Google Calendar
             <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
           </a>
-          <button
-            type="button"
-            class="bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
-            @click="copy(calendarUrl)"
-          >
-            {{ copied === calendarUrl ? "Copied" : "Copy calendar link" }}
-          </button>
+          <CopyButton :value="calendarUrl" label="Copy calendar link" />
         </div>
       </section>
 
