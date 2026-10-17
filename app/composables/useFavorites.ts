@@ -4,6 +4,8 @@ const BACKUP_KEY = "kikk-favorites";
 interface Backup {
   id: string | null;
   events: string[];
+  /** Of the last list received from the server. */
+  updatedAt?: string | null;
   pending: { add: string[]; remove: string[] };
 }
 
@@ -22,12 +24,14 @@ function readBackup(): Backup | null {
 export function useFavorites() {
   const listId = useState<string | null>("favorites-id", () => null);
   const events = useState<string[]>("favorites-events", () => []);
+  const updatedAt = useState<string | null>("favorites-updated-at", () => null);
   const favorites = computed(() => new Set(events.value));
 
   function writeBackup() {
     const backup: Backup = {
       id: listId.value,
       events: events.value,
+      updatedAt: updatedAt.value,
       pending: { add: [...pending.add], remove: [...pending.remove] },
     };
     try {
@@ -37,13 +41,18 @@ export function useFavorites() {
     }
   }
 
-  function apply(list: FavoritesList) {
-    listId.value = list.id;
-    // The server's list, plus changes made while the request was underway.
-    const merged = new Set(list.events);
+  function withPending(eventIds: readonly string[]): string[] {
+    const merged = new Set(eventIds);
     for (const id of pending.add) merged.add(id);
     for (const id of pending.remove) merged.delete(id);
-    events.value = [...merged];
+    return [...merged];
+  }
+
+  function apply(list: FavoritesList) {
+    listId.value = list.id;
+    updatedAt.value = list.updatedAt;
+    // The server's list, plus changes made while the request was underway.
+    events.value = withPending(list.events);
   }
 
   async function send(add: string[], remove: string[]): Promise<FavoritesList> {
@@ -129,7 +138,15 @@ export function useFavorites() {
         } catch {
           listId.value = backup.id;
           events.value = backup.events;
+          updatedAt.value = backup.updatedAt ?? null;
         }
+      } else if ((backup.updatedAt ?? "") > (updatedAt.value ?? "")) {
+        // The page is older than this device's copy, e.g. when it came from the offline cache.
+        events.value = backup.events;
+        updatedAt.value = backup.updatedAt ?? null;
+      } else {
+        // Show changes that weren't saved yet.
+        events.value = withPending(events.value);
       }
     }
     writeBackup();

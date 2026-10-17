@@ -39,6 +39,7 @@ const selectedBuilding = computed(
 );
 
 const { listId: favoritesListId, events: favoriteEvents } = useFavorites();
+const online = useOnline();
 
 // Restore the scroll position when coming back from an event page.
 const scroller = useTemplateRef<HTMLElement>("scroller");
@@ -83,7 +84,7 @@ useHead({ title: "KIKK 2026 Timetable" });
           <h1 class="font-display text-3xl leading-none font-extrabold tracking-tight uppercase">
             Timetable
           </h1>
-          <p v-if="data?.stale" class="mt-1 text-xs text-neutral-500">
+          <p v-if="!online || data?.stale" class="mt-1 text-xs text-neutral-500">
             Offline · as of {{ updatedAt }}
           </p>
         </div>

@@ -1,6 +1,7 @@
 export default defineNuxtPlugin(async () => {
   const listId = useState<string | null>("favorites-id", () => null);
   const events = useState<string[]>("favorites-events", () => []);
+  const updatedAt = useState<string | null>("favorites-updated-at", () => null);
 
   if (import.meta.server) {
     // Load the list during server rendering, so favorites are highlighted right away.
@@ -10,6 +11,7 @@ export default defineNuxtPlugin(async () => {
       if (list) {
         listId.value = list.id;
         events.value = list.events;
+        updatedAt.value = list.updatedAt;
       }
     }
     return;

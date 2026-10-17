@@ -1,15 +1,29 @@
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-16",
   devtools: { enabled: true },
-  modules: ["@nuxt/icon"],
+  modules: ["@nuxt/icon", "@vite-pwa/nuxt"],
   icon: {
     // Icon sets come from installed @iconify-json/* packages, never the public Iconify API.
     serverBundle: "local",
     clientBundle: { scan: true },
     fallbackToApi: false,
+  },
+  pwa: {
+    // Installable and usable offline, see service-worker/sw.ts.
+    strategies: "injectManifest",
+    srcDir: fileURLToPath(new URL("./service-worker", import.meta.url)),
+    filename: "sw.ts",
+    registerType: "autoUpdate",
+    // Uses public/site.webmanifest from RealFaviconGenerator.
+    manifest: false,
+    injectManifest: {
+      // Pages are cached by the service worker itself.
+      globPatterns: ["**/*.{js,css,woff2,svg,png,ico,webmanifest}"],
+    },
   },
   css: [
     // The fonts kikkfestival.be uses, served by the app itself.
@@ -30,7 +44,10 @@ export default defineNuxtConfig({
         { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
         { rel: "manifest", href: "/site.webmanifest" },
       ],
-      meta: [{ name: "apple-mobile-web-app-title", content: "Timetable" }],
+      meta: [
+        { name: "apple-mobile-web-app-title", content: "Timetable" },
+        { name: "theme-color", content: "#ffffff" },
+      ],
     },
   },
   runtimeConfig: {

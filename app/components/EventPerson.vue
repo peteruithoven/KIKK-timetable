@@ -14,6 +14,7 @@ const bio = computed(() => localize(props.person.bio));
     <img
       v-if="person.photo"
       :src="resizedImage(person.photo, 192)"
+      crossorigin="anonymous"
       alt=""
       loading="lazy"
       class="size-16 shrink-0 bg-block object-cover sm:size-20"

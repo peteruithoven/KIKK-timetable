@@ -50,6 +50,7 @@ const titleStyle = computed(() => {
     <img
       v-if="showImage"
       :src="resizedImage(event.image!, 400)"
+      crossorigin="anonymous"
       alt=""
       loading="lazy"
       decoding="async"

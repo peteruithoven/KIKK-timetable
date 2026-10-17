@@ -98,6 +98,7 @@ useSeoMeta({
     <img
       v-if="event.image"
       :src="resizedImage(event.image, 1600)"
+      crossorigin="anonymous"
       alt=""
       class="aspect-video max-h-[70vh] w-full bg-ink object-cover"
     />
