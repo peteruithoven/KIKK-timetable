@@ -23,6 +23,8 @@ export default defineNuxtConfig({
     injectManifest: {
       // Pages are cached by the service worker itself.
       globPatterns: ["**/*.{js,css,woff2,svg,png,ico,webmanifest}"],
+      // Only for link previews.
+      globIgnores: ["og-image.png"],
     },
   },
   css: [
