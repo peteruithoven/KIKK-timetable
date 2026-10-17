@@ -84,6 +84,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - Cut top right corner: `clip-corner` for filled elements (bevel, `clip-path` fallback) and `bevel-corner` for outlined ones (bevel only; a `clip-path` would leave a gap in the border).
 - Icons: `<Icon name="material-symbols:…">` from the locally installed `@iconify-json/material-symbols`. The Iconify API fallback is off, so install the `@iconify-json/*` package before using another set, then restart the dev server.
 - Timetable: everything scales with `pxPerMinute` (pinch zoom, `useVerticalZoom`). The body cells of the grid have explicit grid positions so the favorites bar layer can overlap them. Favorite bars are sticky, positioned with a spacer (a margin can't move out of a sticky container), and shown only when their block is out of view (IntersectionObserver).
+- Map (`/map`): MapLibre with OpenFreeMap's dark style, loaded client-side only. Its worker URL is set with `setWorkerUrl` from a `?url` import; MapLibre's own runtime URL breaks in Vite (dev pre-bundling and production build).
 - `public/favicon.svg` was edited after RealFaviconGenerator: no dark-mode invert (it made the Firefox Android home screen icon white on white).
 
 ## Gotchas
@@ -97,3 +98,4 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 ## Deployment
 
 - Docker Compose on a VPS behind an HTTPS reverse proxy that must send `X-Forwarded-Proto` and `X-Forwarded-Host` (secure cookie, absolute links). The `data` volume (`/app/.data`) holds favorites and the schedule cache; back it up.
+- Server: `kikk@bratwurst:~/KIKK-timetable`. `vp run server:deploy` pulls and rebuilds there (push first); `vp run server:backup` downloads `/app/.data` to `backups/` (gitignored, contains user data). Don't run these without being asked.
