@@ -54,10 +54,13 @@ export default defineNuxtConfig({
     // Set through NUXT_SUPABASE_URL and NUXT_SUPABASE_KEY, see .env.example.
     supabaseUrl: "",
     supabaseKey: "",
+    // The art trail app, NUXT_TRAIL_SUPABASE_URL and NUXT_TRAIL_SUPABASE_KEY.
+    trailSupabaseUrl: "",
+    trailSupabaseKey: "",
   },
   nitro: {
     storage: {
-      // Favorites and the last fetched schedule. In Docker this is a volume, see compose.yaml.
+      // Favorites and the last fetched schedule and art trail. In Docker this is a volume, see compose.yaml.
       data: { driver: "fsLite", base: "./.data/kv" },
     },
   },

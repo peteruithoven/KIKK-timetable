@@ -1,4 +1,4 @@
-// Fetches the raw schedule tables the way kikkfestival.be/schedule does.
+// Fetches the raw schedule tables the way kikkfestival.be/schedule does, and the art trail.
 // Kept free of Nitro auto-imports so scripts/update-snapshot.ts can use it.
 
 export interface SupabaseConfig {
@@ -6,9 +6,16 @@ export interface SupabaseConfig {
   supabaseKey: string;
 }
 
+/** Adds the Supabase project of Kikk's art trail app, exhibitions.kikkfestival.be. */
+export interface TrailConfig extends SupabaseConfig {
+  trailSupabaseUrl: string;
+  trailSupabaseKey: string;
+}
+
 export const KIKK_SITE_URL = "https://kikkfestival.be";
 
 const TABLES = ["conferences", "by_night_events", "panels"] as const;
+const PUBLISHED = "select=*&status=eq.published&order=created_at.asc";
 
 type Nullable<T> = { [K in keyof T]: T[K] | null };
 
@@ -82,10 +89,64 @@ export interface KikkData {
   panels: PanelRow[];
 }
 
-async function fetchTable(config: SupabaseConfig, table: string): Promise<unknown[]> {
-  const url = `${config.supabaseUrl}/rest/v1/${table}?select=*&status=eq.published&order=created_at.asc`;
-  const response = await fetch(url, {
-    headers: { apikey: config.supabaseKey, Authorization: `Bearer ${config.supabaseKey}` },
+/** An art trail work on kikkfestival.be/public/art-trail. */
+export type InstallationRow = Nullable<{
+  id: string;
+  slug: string;
+  title: string;
+  artist_name: string;
+  artist_bio: string;
+  artist_bio_en: string;
+  description: string;
+  description_en: string;
+  intro_text: string;
+  intro_text_en: string;
+  image_url: string;
+  hero_image_url: string;
+  gallery_images: string[];
+  carousel_credit: string;
+  /** Sometimes the place, mostly the artist's country. */
+  location: string;
+  tags: string[];
+  website_url: string;
+  instagram_url: string;
+  facebook_url: string;
+}>;
+
+/** The same work in the art trail app, which knows where it is. Only the columns used. */
+export type TrailEntryRow = Nullable<{
+  title: string;
+  location_id: string;
+  artist_id: string;
+  year_display: string;
+  materials: string;
+}>;
+
+export type TrailLocationRow = Nullable<{ id: string; name: string }>;
+
+export type TrailArtistRow = Nullable<{ id: string; display_name: string; portrait_url: string }>;
+
+export interface TrailData {
+  installations: InstallationRow[];
+  /** From the art trail app. */
+  entries: TrailEntryRow[];
+  locations: TrailLocationRow[];
+  artists: TrailArtistRow[];
+}
+
+interface Project {
+  url: string;
+  key: string;
+}
+
+function project(url: string, key: string, env: string): Project {
+  if (!url || !key) throw new Error(`Missing ${env}_URL or ${env}_KEY, see .env.example`);
+  return { url, key };
+}
+
+async function fetchTable({ url, key }: Project, table: string, query: string): Promise<unknown[]> {
+  const response = await fetch(`${url}/rest/v1/${table}?${query}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
     signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) {
@@ -99,15 +160,36 @@ async function fetchTable(config: SupabaseConfig, table: string): Promise<unknow
 }
 
 export async function fetchKikkData(config: SupabaseConfig): Promise<KikkData> {
-  if (!config.supabaseUrl || !config.supabaseKey) {
-    throw new Error("Missing NUXT_SUPABASE_URL or NUXT_SUPABASE_KEY, see .env.example");
-  }
+  const kikk = project(config.supabaseUrl, config.supabaseKey, "NUXT_SUPABASE");
   const [conferences, by_night_events, panels] = await Promise.all(
-    TABLES.map((table) => fetchTable(config, table)),
+    TABLES.map((table) => fetchTable(kikk, table, PUBLISHED)),
   );
   return {
     conferences: conferences as ConferenceRow[],
     by_night_events: by_night_events as ByNightRow[],
     panels: panels as PanelRow[],
+  };
+}
+
+/** The works from kikkfestival.be, their places and more from the art trail app. */
+export async function fetchTrailData(config: TrailConfig): Promise<TrailData> {
+  const kikk = project(config.supabaseUrl, config.supabaseKey, "NUXT_SUPABASE");
+  const trail = project(config.trailSupabaseUrl, config.trailSupabaseKey, "NUXT_TRAIL_SUPABASE");
+  const [installations, entries, locations, artists] = await Promise.all([
+    fetchTable(kikk, "installations", PUBLISHED),
+    // Its events are in the schedule.
+    fetchTable(
+      trail,
+      "entries",
+      "select=title,location_id,artist_id,year_display,materials&is_published=eq.true&category=neq.Event",
+    ),
+    fetchTable(trail, "locations", "select=id,name"),
+    fetchTable(trail, "artists", "select=id,display_name,portrait_url"),
+  ]);
+  return {
+    installations: installations as InstallationRow[],
+    entries: entries as TrailEntryRow[],
+    locations: locations as TrailLocationRow[],
+    artists: artists as TrailArtistRow[],
   };
 }

@@ -3,7 +3,7 @@ services:
     container_name: "kikk-timetable"
     build: .
     restart: unless-stopped
-    # NUXT_SUPABASE_URL and NUXT_SUPABASE_KEY, see .env.example.
+    # NUXT_SUPABASE_* and NUXT_TRAIL_SUPABASE_*, see .env.example.
     env_file: .env
     ports:
       - ${NODE_PORT}:3000

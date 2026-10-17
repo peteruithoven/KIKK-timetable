@@ -16,3 +16,12 @@ export function localize(
   if (text?.fr) return { text: text.fr, lang: "fr" };
   return null;
 }
+
+/** The start of some HTML as plain text, for meta descriptions. */
+export function plainText(html: string | undefined): string | undefined {
+  return html
+    ?.replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
+}

@@ -3,7 +3,7 @@ const CHECK_INTERVAL = 60 * 60 * 1000;
 const CONCURRENCY = 4;
 
 interface Saved {
-  /** Hash of the schedule that was saved. */
+  /** Hash of the schedule and art trail that were saved. */
   version: string;
   checkedAt: number;
 }
@@ -21,8 +21,8 @@ export default defineNuxtPlugin(() => {
 });
 
 /**
- * Fetches every event through the service worker, which keeps them, so all event pages open
- * offline, not just visited ones. Runs again when the schedule changes.
+ * Fetches every event and installation through the service worker, which keeps them, so all
+ * their pages open offline, not just visited ones. Runs again when the data changes.
  */
 async function saveForOffline() {
   if (!("serviceWorker" in navigator) || !navigator.onLine) return;
@@ -38,11 +38,17 @@ async function saveForOffline() {
     );
   }
 
-  const schedule = await $fetch<EventsResponse>("/api/events").catch(() => null);
-  if (!schedule) return;
-  const version = hash(JSON.stringify(schedule.events));
+  const [schedule, trail] = await Promise.all([
+    $fetch<EventsResponse>("/api/events").catch(() => null),
+    $fetch<TrailResponse>("/api/trail").catch(() => null),
+  ]);
+  if (!schedule || !trail) return;
+  const version = hash(JSON.stringify([schedule.events, trail.installations]));
   if (saved?.version !== version) {
-    const queue = schedule.events.map((event) => `/api/events${eventPath(event)}`);
+    const queue = [
+      ...schedule.events.map((event) => `/api/events${eventPath(event)}`),
+      ...trail.installations.map((installation) => `/api${installationPath(installation)}`),
+    ];
     await Promise.all(
       Array.from({ length: CONCURRENCY }, async () => {
         for (let url = queue.shift(); url; url = queue.shift()) {

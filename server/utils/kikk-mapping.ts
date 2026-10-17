@@ -1,5 +1,14 @@
 import sanitizeHtml from "sanitize-html";
-import type { ByNightRow, ConferenceRow, KikkData, PanelPersonRow, PanelRow } from "./kikk-api";
+import type {
+  ByNightRow,
+  ConferenceRow,
+  InstallationRow,
+  KikkData,
+  PanelPersonRow,
+  PanelRow,
+  TrailData,
+  TrailEntryRow,
+} from "./kikk-api";
 import { KIKK_SITE_URL } from "./kikk-api";
 
 const TIME_ZONE = "Europe/Brussels";
@@ -13,6 +22,9 @@ const TRACKS: Record<string, string> = {
 
 const VENUE_ALIASES: Record<string, string> = {
   Delta: "Le Delta",
+  // Names in the art trail app.
+  "Galerie de Namur": "Galerie du Beffroi",
+  "L'Église Saint-Loup": "Église Saint-Loup",
 };
 
 /** Trimmed string, or null when empty. */
@@ -217,4 +229,96 @@ export function toFestivalEvents(data: KikkData): FestivalEvent[] {
         (a.start ?? "").localeCompare(b.start ?? "") ||
         (a.venue ?? "").localeCompare(b.venue ?? ""),
     );
+}
+
+/** Lowercase letters and digits only, e.g. `"L'échelle - Ladder"` → `"lechelleladder"`. */
+function comparable(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Finds by name, also when one name has more words than the other, as titles differ a bit
+ * between kikkfestival.be and the art trail app ("LADDER", "L'échelle - Ladder").
+ */
+function findByName<T>(
+  items: T[],
+  name: string,
+  nameOf: (item: T) => string | null,
+): T | undefined {
+  const wanted = comparable(name);
+  if (wanted.length < 4) return undefined;
+  const names = items.map((item) => comparable(nameOf(item) ?? ""));
+  const index = names.findIndex((candidate) => candidate === wanted);
+  if (index !== -1) return items[index];
+  return items.find((_, i) => {
+    const candidate = names[i]!;
+    return candidate.length >= 4 && (candidate.includes(wanted) || wanted.includes(candidate));
+  });
+}
+
+/** Placeholders like "-" or "None" count as empty. */
+function detail(value: string | null): string | null {
+  const result = text(value)
+    ?.split(/\s*\n\s*/)
+    .filter(Boolean)
+    .join(" · ");
+  return result && !/^(-|none\b.*)$/i.test(result) ? result : null;
+}
+
+function fromInstallation(row: InstallationRow, trail: TrailData): Installation | null {
+  const title = text(row.title);
+  if (!title || !row.slug) return null;
+  const entry = findByName<TrailEntryRow>(trail.entries, title, (e) => e.title);
+  const location =
+    trail.locations.find((l) => l.id === entry?.location_id) ??
+    // Some works have their place in `location` instead.
+    findByName(trail.locations, row.location ?? "", (l) => l.name);
+  const artist = trail.artists.find((a) => a.id === entry?.artist_id);
+  // kikkfestival.be has many names in capitals, the art trail app spells them properly.
+  const artistName =
+    text(row.artist_name) && comparable(row.artist_name!) === comparable(artist?.display_name ?? "")
+      ? text(artist!.display_name)
+      : text(row.artist_name);
+  const heroImage = text(row.hero_image_url) ?? text(row.image_url);
+  return {
+    id: `installation:${row.id}`,
+    slug: row.slug.replace(/-art-trail-kikk\d{4}$/, ""),
+    url: `${KIKK_SITE_URL}/installations/${row.slug}`,
+    title,
+    artist: artistName
+      ? {
+          name: artistName,
+          company: null,
+          role: null,
+          bio: richText(row.artist_bio, row.artist_bio_en),
+          location: null,
+          photo: text(artist?.portrait_url),
+        }
+      : null,
+    venue: venue(location?.name),
+    year: detail(entry?.year_display ?? null),
+    medium: detail(entry?.materials ?? null),
+    intro: richText(row.intro_text, row.intro_text_en),
+    description: richText(row.description, row.description_en),
+    image: text(row.image_url) ?? heroImage,
+    heroImage,
+    gallery: (row.gallery_images ?? [])
+      .map(text)
+      .filter((url): url is string => url !== null && url !== heroImage),
+    credit: text(row.carousel_credit),
+    tags: tags(row),
+    websiteUrl: text(row.website_url),
+    instagramUrl: text(row.instagram_url),
+    facebookUrl: text(row.facebook_url),
+  };
+}
+
+export function toInstallations(data: TrailData): Installation[] {
+  return data.installations
+    .map((row) => fromInstallation(row, data))
+    .filter((installation): installation is Installation => installation !== null);
 }

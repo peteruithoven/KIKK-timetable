@@ -138,15 +138,25 @@ useHead({ title: "KIKK 2026 Timetable" });
             </span>
           </NuxtLink>
         </nav>
-        <NuxtLink
-          v-if="favoritesListId"
-          :to="listPath(favoritesListId)"
-          class="inline-flex shrink-0 items-center gap-1.5 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
-        >
-          <Icon name="material-symbols:star-outline" class="size-4" aria-hidden="true" />
-          Favorites
-          <span class="text-neutral-500 tabular-nums">{{ favoriteEvents.length }}</span>
-        </NuxtLink>
+        <!-- Icons only on phones, where the labels would push the days out of view. -->
+        <div class="flex shrink-0 gap-2">
+          <NuxtLink
+            to="/trail"
+            class="inline-flex items-center gap-1.5 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+          >
+            <Icon name="material-symbols:palette-outline" class="size-4" aria-hidden="true" />
+            <span class="max-sm:sr-only">Art trail</span>
+          </NuxtLink>
+          <NuxtLink
+            v-if="favoritesListId"
+            :to="listPath(favoritesListId)"
+            class="inline-flex items-center gap-1.5 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+          >
+            <Icon name="material-symbols:star-outline" class="size-4" aria-hidden="true" />
+            <span class="max-sm:sr-only">Favorites</span>
+            <span class="text-neutral-500 tabular-nums">{{ favoriteEvents.length }}</span>
+          </NuxtLink>
+        </div>
       </div>
     </header>
 

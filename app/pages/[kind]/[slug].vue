@@ -48,14 +48,6 @@ function goBack(clickEvent: MouseEvent) {
   }
 }
 
-function plainText(html: string | undefined): string | undefined {
-  return html
-    ?.replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 200);
-}
-
 useSeoMeta({
   title: () => `${event.value?.title} · KIKK 2026`,
   ogTitle: () => event.value?.title,

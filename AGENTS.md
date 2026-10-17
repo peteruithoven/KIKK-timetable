@@ -66,6 +66,13 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - Event ids are `kind:uuid`. Pages are `/<kind>/<slug>` (`talk`, `panel`, `party`), backed by `/api/events/<kind>/<slug>`.
 - Images: `resizedImage()` uses Supabase's `/storage/v1/render/image/` endpoint. Keep `crossorigin="anonymous"` on event images, the service worker relies on it.
 
+## Art trail
+
+- `/trail` and `/trail/<slug>`, backed by `/api/trail` and `/api/trail/<slug>`. Installations aren't timed, so they're their own type (`shared/types/installation.ts`), not a `FestivalEvent` kind, and can't be favorites. Slugs are Kikk's without the `-art-trail-kikk2026` suffix.
+- Two sources, fetched by `fetchTrailData()`: Kikk's `installations` table (texts in both languages, images, links; its `location` is mostly the artist's country) and the Supabase project of Kikk's art trail app exhibitions.kikkfestival.be (`NUXT_TRAIL_SUPABASE_URL` / `_KEY`, public anon key from that app's bundle): `entries`, `locations` and `artists`, for the place, year, materials, portrait and properly cased artist names. Rows are matched on title, loosely, as titles differ ("LADDER", "L'échelle - Ladder"); see `findByName()` in `kikk-mapping.ts`.
+- `kikk-cache.ts` caches it separately from the schedule (`kikk:trail`, fallback `server/assets/trail-snapshot.json`, also written by `vp run snapshot`), so a broken trail source never blocks schedule updates.
+- The overview groups works by place, north to south.
+
 ## Favorites
 
 - No accounts. Lists live in Nitro storage as `favorites:<id>` (ids like `brave-otter-4821`), via `/api/lists`. The id is the share link (`/list/<id>`) and gives edit access.
@@ -85,7 +92,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - Icons: `<Icon name="material-symbols:…">` from the locally installed `@iconify-json/material-symbols`. The Iconify API fallback is off, so install the `@iconify-json/*` package before using another set, then restart the dev server.
 - Timetable: everything scales with `pxPerMinute` (pinch zoom, `useVerticalZoom`). The body cells of the grid have explicit grid positions so the favorites bar layer can overlap them. Favorite bars are sticky, positioned with a spacer (a margin can't move out of a sticky container), and shown only when their block is out of view (IntersectionObserver).
 - Map (`/map`): MapLibre with OpenFreeMap's dark style, loaded client-side only. Its worker URL is set with `setWorkerUrl` from a `?url` import; MapLibre's own runtime URL breaks in Vite (dev pre-bundling and production build).
-- Venues on the map: hardcoded in `app/utils/venues.ts` (coordinates from kikkfestival.be/map), drawn as a symbol layer by `app/utils/map-layers.ts`. `/map?venue=<key>` highlights one by dimming the others, without moving the view. Clicking a pin sets it, clicking elsewhere clears it (`router.replace`, so Back leaves the map). Timetable column headers and event pages link there via `venueMapPath()`. The timetable's venue select lists the ones with events.
+- Venues on the map: hardcoded in `app/utils/venues.ts` (coordinates from kikkfestival.be/map, art trail places from the trail app's `locations`; their names are mapped with `VENUE_ALIASES` in `kikk-mapping.ts`), drawn as a symbol layer by `app/utils/map-layers.ts`. `/map?venue=<key>` highlights one by dimming the others, without moving the view. Clicking a pin sets it, clicking elsewhere clears it (`router.replace`, so Back leaves the map). Timetable column headers and event pages link there via `venueMapPath()`. The timetable's venue select lists the ones with events.
 - `public/favicon.svg` was edited after RealFaviconGenerator: no dark-mode invert (it made the Firefox Android home screen icon white on white).
 
 ## Gotchas
@@ -98,5 +105,5 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 
 ## Deployment
 
-- Docker Compose on a VPS behind an HTTPS reverse proxy that must send `X-Forwarded-Proto` and `X-Forwarded-Host` (secure cookie, absolute links). The `data` volume (`/app/.data`) holds favorites and the schedule cache; back it up.
+- Docker Compose on a VPS behind an HTTPS reverse proxy that must send `X-Forwarded-Proto` and `X-Forwarded-Host` (secure cookie, absolute links). The `data` volume (`/app/.data`) holds favorites and the schedule and art trail caches; back it up.
 - Server: `kikk@bratwurst:~/KIKK-timetable`. `vp run server:deploy` pulls and rebuilds there (push first); `vp run server:backup` downloads `/app/.data` to `backups/` (gitignored, contains user data). Don't run these without being asked.
