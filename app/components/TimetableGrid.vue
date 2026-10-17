@@ -38,6 +38,54 @@ const columnStyle = computed(() => ({
   ].join(", "),
 }));
 
+// Favorites as bars at the edge of the screen when their column is scrolled out of view.
+// Positioned like their block; sticky keeps them at the edge.
+const { isFavorite } = useFavorites();
+const favoriteBars = computed(() => {
+  const count = props.timetable.venues.length;
+  return props.timetable.venues.flatMap((venue, column) =>
+    venue.events
+      .filter((placed) => isFavorite(placed.event.id))
+      .map((placed) => ({
+        id: placed.event.id,
+        top: `${placed.top * pxPerMinute.value + 1}px`,
+        height: `${placed.duration * pxPerMinute.value - 2}px`,
+        // Just inside the block's left edge: column border and gap are 3px.
+        offset: `calc(${((column + placed.lane / placed.lanes) / count) * 100}% + 4px)`,
+      })),
+  );
+});
+
+// Bars only show while their block is completely out of view. Starts empty, so no bars show
+// over their own block before the observer reports.
+const grid = useTemplateRef<HTMLElement>("grid");
+const outOfView = reactive(new Set<string>());
+let observer: IntersectionObserver | undefined;
+function observeFavorites() {
+  observer?.disconnect();
+  outOfView.clear();
+  const timeColumn = grid.value?.querySelector<HTMLElement>("[data-timeline]")?.offsetWidth ?? 0;
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const id = (entry.target as HTMLElement).dataset.favorite!;
+        if (entry.isIntersecting) outOfView.delete(id);
+        else outOfView.add(id);
+      }
+    },
+    // Blocks behind the sticky time column are out of view too.
+    { rootMargin: `0px 0px 0px -${timeColumn}px` },
+  );
+  grid.value?.querySelectorAll("[data-favorite]").forEach((card) => observer!.observe(card));
+}
+// Only when other blocks are shown, not on zoom: the observer keeps tracking resized blocks.
+const favoriteBlocks = computed(
+  () =>
+    `${props.date}|${props.timetable.venues.map((v) => v.name)}|${favoriteBars.value.map((b) => b.id)}`,
+);
+onMounted(() => watch(favoriteBlocks, observeFavorites, { immediate: true, flush: "post" }));
+onBeforeUnmount(() => observer?.disconnect());
+
 // Only known on the client, so the server render has no time marker.
 const now = ref<number | null>(null);
 let timer: ReturnType<typeof setInterval> | undefined;
@@ -56,7 +104,7 @@ const nowTop = computed(() => {
 </script>
 
 <template>
-  <div class="grid min-w-full" :style="gridStyle">
+  <div ref="grid" class="grid min-w-full" :style="gridStyle">
     <div
       class="sticky top-0 left-0 z-30 flex flex-col items-center justify-center border-b border-ink bg-paper py-2 leading-none"
     >
@@ -81,7 +129,12 @@ const nowTop = computed(() => {
       </span>
     </div>
 
-    <div data-timeline class="sticky left-0 z-10 bg-paper" :style="{ height: `${height}px` }">
+    <!-- Explicit grid positions, so the favorites layer below can overlap the columns. -->
+    <div
+      data-timeline
+      class="sticky left-0 z-10 bg-paper"
+      :style="{ height: `${height}px`, gridRow: 2, gridColumn: 1 }"
+    >
       <span
         v-for="hour in hours"
         :key="hour.label"
@@ -92,10 +145,10 @@ const nowTop = computed(() => {
       </span>
     </div>
     <div
-      v-for="venue in timetable.venues"
+      v-for="(venue, index) in timetable.venues"
       :key="venue.name"
       class="relative border-l border-line"
-      :style="columnStyle"
+      :style="{ ...columnStyle, gridRow: 2, gridColumn: index + 2 }"
     >
       <TimetableEventCard
         v-for="placed in venue.events"
@@ -113,6 +166,27 @@ const nowTop = computed(() => {
         class="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-ink"
         :style="{ top: `${nowTop}px` }"
       />
+    </div>
+    <div
+      v-if="favoriteBars.length"
+      class="pointer-events-none relative z-5"
+      :style="{ gridRow: 2, gridColumn: '2 / -1' }"
+      aria-hidden="true"
+    >
+      <div
+        v-for="bar in favoriteBars"
+        :key="bar.id"
+        class="absolute inset-x-0 flex"
+        :style="{ top: bar.top, height: bar.height }"
+      >
+        <!-- A spacer rather than a margin: sticky can't move margins out of the container. -->
+        <div class="shrink-0" :style="{ width: bar.offset }" />
+        <div
+          class="sticky right-0 w-1 shrink-0 bg-ink"
+          :class="{ invisible: !outOfView.has(bar.id) }"
+          :style="{ left: TIME_COLUMN }"
+        />
+      </div>
     </div>
   </div>
 </template>

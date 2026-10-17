@@ -25,6 +25,7 @@ const titleStyle = computed(() => {
 <template>
   <NuxtLink
     :to="eventPath(event)"
+    :data-favorite="favorite ? event.id : undefined"
     :title="`${event.start}${event.end ? `–${event.end}` : ''} · ${event.title}`"
     class="group absolute flex clip-corner flex-col overflow-hidden transition-colors focus-visible:outline-none"
     :class="
