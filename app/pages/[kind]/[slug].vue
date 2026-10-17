@@ -70,7 +70,7 @@ useSeoMeta({
     >
       <a
         :href="timetableHref"
-        class="inline-flex items-center gap-2 border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+        class="inline-flex items-center gap-2 bevel-corner border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
         @click="goBack"
       >
         <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Timetable
@@ -78,7 +78,7 @@ useSeoMeta({
       <button
         type="button"
         :aria-pressed="favorite"
-        class="inline-flex items-center gap-2 border border-ink px-3 py-1.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors"
+        class="inline-flex items-center gap-2 bevel-corner border border-ink px-3 py-1.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors"
         :class="
           favorite
             ? 'clip-corner bg-ink text-paper hover:bg-neutral-700'
@@ -168,7 +168,7 @@ useSeoMeta({
           :href="event.ticketUrl"
           target="_blank"
           rel="noopener"
-          class="inline-flex items-center gap-1.5 border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+          class="inline-flex items-center gap-1.5 bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
         >
           Tickets <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
         </a>

@@ -70,7 +70,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
     <nav class="border-b border-line px-4 py-3">
       <NuxtLink
         to="/"
-        class="inline-flex items-center gap-2 border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+        class="inline-flex items-center gap-2 bevel-corner border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
       >
         <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Timetable
       </NuxtLink>
@@ -107,7 +107,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
           <button
             v-if="canShare"
             type="button"
-            class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+            class="bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
             @click="share"
           >
             Share
@@ -155,14 +155,14 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
             :href="googleCalendarUrl"
             target="_blank"
             rel="noopener"
-            class="inline-flex items-center gap-1.5 border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+            class="inline-flex items-center gap-1.5 bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
           >
             Google Calendar
             <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
           </a>
           <button
             type="button"
-            class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+            class="bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
             @click="copy(calendarUrl)"
           >
             {{ copied === calendarUrl ? "Copied" : "Copy calendar link" }}

@@ -97,7 +97,7 @@ useHead({ title: "KIKK 2026 Timetable" });
           <span class="sr-only">Venue</span>
           <select
             v-model="selectedVenue"
-            class="appearance-none border py-2 pr-8 pl-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors"
+            class="bevel-corner appearance-none border py-2 pr-8 pl-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors"
             :class="
               selectedVenue === 'all'
                 ? 'border-line bg-paper text-ink hover:border-ink'
@@ -125,7 +125,7 @@ useHead({ title: "KIKK 2026 Timetable" });
             :to="{ query: { ...route.query, day } }"
             replace
             :aria-current="day === selectedDay ? 'date' : undefined"
-            class="flex w-14 shrink-0 flex-col items-center border border-line py-1.5 transition-colors hover:border-ink aria-[current]:clip-corner aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-paper"
+            class="flex w-14 shrink-0 flex-col items-center bevel-corner border border-line py-1.5 transition-colors hover:border-ink aria-[current]:clip-corner aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-paper"
           >
             <span class="text-[11px] uppercase">{{ formatDay(day, { weekday: "short" }) }}</span>
             <span class="font-display text-xl leading-none font-bold">
@@ -136,7 +136,7 @@ useHead({ title: "KIKK 2026 Timetable" });
         <NuxtLink
           v-if="favoritesListId"
           :to="listPath(favoritesListId)"
-          class="inline-flex shrink-0 items-center gap-1.5 border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+          class="inline-flex shrink-0 items-center gap-1.5 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
         >
           <Icon name="material-symbols:star-outline" class="size-4" aria-hidden="true" />
           Favorites

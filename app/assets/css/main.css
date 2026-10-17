@@ -11,7 +11,21 @@
   --font-display: "Inter Tight Variable", "Helvetica Neue", ui-sans-serif, sans-serif;
 }
 
-/* Top right corner cut off at 45°. Size with --corner. */
+/*
+ * Top right corner cut off at 45°, for outlined elements: the border follows the diagonal.
+ * Browsers without corner-shape keep a square corner. Size with --corner.
+ */
+@utility bevel-corner {
+  @supports (corner-shape: bevel) {
+    border-top-right-radius: var(--corner, 8px);
+    corner-shape: bevel;
+  }
+}
+
+/*
+ * The same for filled elements. Browsers without corner-shape cut them with clip-path, which
+ * would leave a gap in a border, hence bevel-corner for outlined elements.
+ */
 @utility clip-corner {
   clip-path: polygon(
     0 0,
@@ -20,6 +34,11 @@
     100% 100%,
     0 100%
   );
+  @supports (corner-shape: bevel) {
+    clip-path: none;
+    border-top-right-radius: var(--corner, 8px);
+    corner-shape: bevel;
+  }
 }
 
 /* Sanitized HTML from the Kikk CMS. */
