@@ -6,6 +6,9 @@ useSeoMeta({
 
 const linkClass =
   "underline decoration-line underline-offset-4 transition-colors hover:decoration-ink";
+
+// Behind the reverse proxy the app itself is reached over plain http.
+const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin}/`;
 </script>
 
 <template>
@@ -45,7 +48,7 @@ const linkClass =
         </p>
         <p>
           Use the timetable to keep track of the talks, parties, and artworks you don’t want to
-          miss. No account needed. Feel free to share it with anyone heading to the festival.
+          miss. No account needed.
         </p>
         <p>
           The programme updates automatically from
@@ -74,6 +77,25 @@ const linkClass =
           <a href="mailto:peter@peteruithoven.nl" :class="linkClass">peter@peteruithoven.nl</a>.
         </p>
       </div>
+
+      <section id="share" class="mt-10 max-w-prose scroll-mt-20 border-y border-line py-6">
+        <h2 class="font-display text-2xl font-extrabold tracking-tight uppercase">Share</h2>
+        <p class="mt-2 text-neutral-700">
+          Know someone heading to the festival? Send them the link, or let them scan the code.
+        </p>
+        <div class="mt-5 flex flex-wrap items-start gap-6">
+          <QrCodeButton :url="appUrl" label="KIKK 2026 Timetable" class="w-40" />
+          <div class="flex flex-col items-start gap-2">
+            <ShareButton
+              :url="appUrl"
+              title="KIKK 2026 Timetable"
+              text="Unofficial timetable for KIKK Festival 2026, with talks, parties, the art trail and your favorites."
+            />
+            <CopyButton :value="appUrl" />
+            <p class="mt-1 text-sm break-all text-neutral-500">{{ appUrl }}</p>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 </template>
