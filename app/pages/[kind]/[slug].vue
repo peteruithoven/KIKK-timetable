@@ -65,7 +65,9 @@ useSeoMeta({
 
 <template>
   <div v-if="event" class="min-h-dvh">
-    <nav class="border-b border-line px-4 py-3">
+    <nav
+      class="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-line bg-paper px-4 py-3"
+    >
       <a
         :href="timetableHref"
         class="inline-flex items-center gap-2 border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
@@ -73,6 +75,20 @@ useSeoMeta({
       >
         <span aria-hidden="true">←</span> Timetable
       </a>
+      <button
+        type="button"
+        :aria-pressed="favorite"
+        class="inline-flex items-center gap-2 border border-ink px-3 py-1.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors"
+        :class="
+          favorite
+            ? 'clip-corner bg-ink text-paper hover:bg-neutral-700'
+            : 'hover:bg-ink hover:text-paper'
+        "
+        @click="favorites.toggle(event.id)"
+      >
+        <span aria-hidden="true">{{ favorite ? "★" : "☆" }}</span>
+        {{ favorite ? "Favorite" : "Add to favorites" }}
+      </button>
     </nav>
 
     <img
@@ -133,25 +149,11 @@ useSeoMeta({
       </dl>
 
       <div class="mt-5 mb-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          :aria-pressed="favorite"
-          class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors"
-          :class="
-            favorite
-              ? 'clip-corner bg-ink text-paper hover:bg-neutral-700'
-              : 'hover:bg-ink hover:text-paper'
-          "
-          @click="favorites.toggle(event.id)"
-        >
-          <span aria-hidden="true">{{ favorite ? "★" : "☆" }}</span>
-          {{ favorite ? "Favorite" : "Add to favorites" }}
-        </button>
         <a
           :href="event.url"
           target="_blank"
           rel="noopener"
-          class="border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+          class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
         >
           More on kikkfestival.be <span aria-hidden="true">↗</span>
         </a>
