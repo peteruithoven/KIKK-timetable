@@ -81,3 +81,22 @@ function addPinImage(map: MapLibreMap) {
     pixelRatio: PIN_PIXEL_RATIO,
   });
 }
+
+/** Around the click, so pins are easy to hit with a finger. In pixels. */
+const CLICK_MARGIN = 12;
+
+/** Calls `onClick` with the key of the clicked venue, or null for clicks elsewhere on the map. */
+export function onVenueClick(map: MapLibreMap, onClick: (key: string | null) => void) {
+  map.on("click", ({ point }) => {
+    const [feature] = map.queryRenderedFeatures(
+      [
+        [point.x - CLICK_MARGIN, point.y - CLICK_MARGIN],
+        [point.x + CLICK_MARGIN, point.y + CLICK_MARGIN],
+      ],
+      { layers: [VENUE_LAYER] },
+    );
+    onClick(feature?.properties.key ?? null);
+  });
+  map.on("mouseenter", VENUE_LAYER, () => (map.getCanvas().style.cursor = "pointer"));
+  map.on("mouseleave", VENUE_LAYER, () => (map.getCanvas().style.cursor = ""));
+}

@@ -34,6 +34,11 @@ onMounted(async () => {
   });
   instance.once("load", () => {
     addVenueLayer(instance, highlightedVenue.value);
+    onVenueClick(instance, (key) => {
+      // Replace, so Back still goes back to where the map was opened from.
+      const { venue: _, ...query } = route.query;
+      router.replace({ query: key ? { ...query, venue: key } : query });
+    });
     layersAdded = true;
   });
   map = instance;
