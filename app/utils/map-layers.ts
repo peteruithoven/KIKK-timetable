@@ -1,7 +1,15 @@
-import type { Map as MapLibreMap } from "maplibre-gl";
+import type {
+  ExpressionSpecification,
+  Map as MapLibreMap,
+  StyleSpecification,
+  SymbolLayerSpecification,
+} from "maplibre-gl";
 
 /** Of the venues other than the highlighted one. */
 const DIMMED_OPACITY = 0.4;
+
+/** Global state with the key of the highlighted venue, `""` for none. */
+const HIGHLIGHTED_STATE = "highlightedVenue";
 
 const PIN_IMAGE = "pin";
 const PIN_SIZE = 12;
@@ -18,64 +26,92 @@ const venueLayer = (key: string) => `venue-${key}`;
 const VENUE_LAYERS = VENUES.map((venue) => venueLayer(venue.key));
 
 /**
- * Venue pins with their names. Map layers rather than HTML markers, so MapLibre hides labels
- * that would overlap. Call once the map's style has loaded.
+ * Adds the venue pins with their names to a style, for `setStyle`'s `transformStyle`, so they're
+ * drawn along with the map instead of after it has loaded. Map layers rather than HTML markers, so
+ * MapLibre hides labels that would overlap. Needs the image from `addPinImage()`.
  */
-export function addVenueLayer(map: MapLibreMap, highlighted: string | null = null) {
-  addPinImage(map);
-  map.addSource("venues", {
-    type: "geojson",
-    data: {
-      type: "FeatureCollection",
-      features: VENUES.map((venue) => ({
-        type: "Feature",
-        properties: { key: venue.key, name: venue.name },
-        geometry: { type: "Point", coordinates: venue.coordinates },
-      })),
+export function withVenueLayers(
+  style: StyleSpecification,
+  highlighted: string | null = null,
+): StyleSpecification {
+  // The highlighted venue on top.
+  const venues = [
+    ...VENUES.filter((venue) => venue.key !== highlighted),
+    ...VENUES.filter((venue) => venue.key === highlighted),
+  ];
+  return {
+    ...style,
+    state: { ...style.state, [HIGHLIGHTED_STATE]: { default: highlighted ?? "" } },
+    sources: {
+      ...style.sources,
+      venues: {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: VENUES.map((venue) => ({
+            type: "Feature",
+            properties: { key: venue.key, name: venue.name },
+            geometry: { type: "Point", coordinates: venue.coordinates },
+          })),
+        },
+      },
     },
-  });
-  for (const venue of VENUES) {
-    map.addLayer({
-      id: venueLayer(venue.key),
-      type: "symbol",
-      source: "venues",
-      filter: ["==", ["get", "key"], venue.key],
-      layout: {
-        "icon-image": PIN_IMAGE,
-        "icon-allow-overlap": true,
-        "text-field": ["get", "name"],
-        // The fonts OpenFreeMap serves.
-        "text-font": ["Noto Sans Bold"],
-        "text-size": 12,
-        "text-transform": "uppercase",
-        "text-letter-spacing": 0.1,
-        "text-variable-anchor": ["left", "right", "top", "bottom"],
-        "text-radial-offset": 0.9,
-        // Pins stay when their label doesn't fit, zooming in brings it back.
-        "text-optional": true,
-      },
-      paint: {
-        "text-color": "#ffffff",
-        "text-halo-color": "#121212",
-        "text-halo-width": 1.5,
-      },
-    });
-  }
-  highlightVenue(map, highlighted);
+    layers: [...style.layers, ...venues.map((venue) => venueLayerSpecification(venue.key))],
+  };
 }
 
-/** Dims the other venues, `null` shows them all as normal. Keeps the view as it is. */
+function venueLayerSpecification(key: string): SymbolLayerSpecification {
+  // Global state rather than `setPaintProperty()`, so a highlight from the URL is there from the
+  // first frame. Changes to it fade like other paint changes.
+  const opacity: ExpressionSpecification = [
+    "case",
+    ["==", ["global-state", HIGHLIGHTED_STATE], key],
+    1,
+    ["to-boolean", ["global-state", HIGHLIGHTED_STATE]],
+    DIMMED_OPACITY,
+    1,
+  ];
+  return {
+    id: venueLayer(key),
+    type: "symbol",
+    source: "venues",
+    filter: ["==", ["get", "key"], key],
+    layout: {
+      "icon-image": PIN_IMAGE,
+      "icon-allow-overlap": true,
+      "text-field": ["get", "name"],
+      // The fonts OpenFreeMap serves.
+      "text-font": ["Noto Sans Bold"],
+      "text-size": 12,
+      "text-transform": "uppercase",
+      "text-letter-spacing": 0.1,
+      "text-variable-anchor": ["left", "right", "top", "bottom"],
+      "text-radial-offset": 0.9,
+      // Pins stay when their label doesn't fit, zooming in brings it back.
+      "text-optional": true,
+    },
+    paint: {
+      "text-color": "#ffffff",
+      "text-halo-color": "#121212",
+      "text-halo-width": 1.5,
+      "icon-opacity": opacity,
+      "text-opacity": opacity,
+    },
+  };
+}
+
+/**
+ * Dims the other venues, `null` shows them all as normal. Keeps the view as it is. Call once the
+ * style has loaded, `withVenueLayers()` sets the initial highlight.
+ */
 export function highlightVenue(map: MapLibreMap, key: string | null) {
-  for (const venue of VENUES) {
-    const opacity = key && venue.key !== key ? DIMMED_OPACITY : 1;
-    map.setPaintProperty(venueLayer(venue.key), "icon-opacity", opacity);
-    map.setPaintProperty(venueLayer(venue.key), "text-opacity", opacity);
-  }
+  // Not null, that would reset it to the initial highlight.
+  map.setGlobalStateProperty(HIGHLIGHTED_STATE, key ?? "");
   if (key && map.getLayer(venueLayer(key))) map.moveLayer(venueLayer(key));
 }
 
-/** White square with the cut top right corner of the Kikk style. */
-function addPinImage(map: MapLibreMap) {
+/** White square with the cut top right corner of the Kikk style. Can be added before the style loads. */
+export function addPinImage(map: MapLibreMap) {
   if (map.hasImage(PIN_IMAGE)) return;
   const size = PIN_SIZE * PIN_PIXEL_RATIO;
   const corner = PIN_CORNER * PIN_PIXEL_RATIO;

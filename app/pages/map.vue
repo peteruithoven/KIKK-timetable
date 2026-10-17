@@ -44,7 +44,7 @@ function selectVenue(key: string | null) {
 
 const container = useTemplateRef<HTMLDivElement>("container");
 let map: MapLibreMap | undefined;
-let layersAdded = false;
+let styleLoaded = false;
 
 onMounted(async () => {
   // MapLibre needs WebGL and the DOM, and it's big, so it's only loaded on this page.
@@ -55,22 +55,25 @@ onMounted(async () => {
   for (const venue of VENUES) bounds.extend(venue.coordinates);
   const instance = new Map({
     container: container.value,
-    style: "https://tiles.openfreemap.org/styles/dark",
     bounds,
     fitBoundsOptions: { padding: 48 },
     // The full text instead of an info button.
     attributionControl: { compact: false },
   });
-  instance.once("load", () => {
-    addVenueLayer(instance, highlightedVenue.value);
+  instance.setStyle("https://tiles.openfreemap.org/styles/dark", {
+    // Runs when the style has been fetched, so it picks up a highlight changed in the meantime.
+    transformStyle: (_, style) => withVenueLayers(style, highlightedVenue.value),
+  });
+  addPinImage(instance);
+  instance.once("style.load", () => {
     onVenueClick(instance, selectVenue);
-    layersAdded = true;
+    styleLoaded = true;
   });
   map = instance;
 });
 
 watch(highlightedVenue, (key) => {
-  if (map && layersAdded) highlightVenue(map, key);
+  if (map && styleLoaded) highlightVenue(map, key);
 });
 
 onBeforeUnmount(() => map?.remove());
