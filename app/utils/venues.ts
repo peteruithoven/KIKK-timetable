@@ -22,9 +22,15 @@ export const VENUES: Venue[] = [
   { key: "pavillon", name: "Le Pavillon", coordinates: [4.858922, 50.457431] },
 ];
 
+/** The place of an event venue, e.g. `"La Bourse — Auditoire Rops"` → La Bourse. */
+export function findVenue(venue: string | null): Venue | undefined {
+  if (!venue) return undefined;
+  const { building, room } = venueParts(venue);
+  return VENUES.find((place) => place.name === (building ?? room));
+}
+
 /** `"La Bourse — Auditoire Rops"` → `"/map?venue=bourse"`, null for places not on the map. */
 export function venueMapPath(venue: string): string | null {
-  const { building, room } = venueParts(venue);
-  const key = VENUES.find((place) => place.name === (building ?? room))?.key;
+  const key = findVenue(venue)?.key;
   return key ? `/map?venue=${key}` : null;
 }

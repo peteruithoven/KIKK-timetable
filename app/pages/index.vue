@@ -13,10 +13,15 @@ const selectedDay = computed(() => {
 
 const router = useRouter();
 
-const selectedVenue = computed<VenueFilter | "all">({
+// The places on the map that have events.
+const venues = computed(() =>
+  VENUES.filter((venue) => data.value?.events.some((event) => findVenue(event.venue) === venue)),
+);
+
+const selectedVenue = computed<string>({
   get() {
     const requested = route.query.venue;
-    return VENUE_FILTERS.find((venue) => venue.key === requested)?.key ?? "all";
+    return venues.value.find((venue) => venue.key === requested)?.key ?? "all";
   },
   set(venue) {
     const { venue: _, ...query } = route.query;
@@ -29,13 +34,13 @@ const timetable = computed(() =>
     data.value?.events.filter(
       (event) =>
         event.date === selectedDay.value &&
-        (selectedVenue.value === "all" || isInBuilding(event, selectedVenue.value)),
+        (selectedVenue.value === "all" || findVenue(event.venue)?.key === selectedVenue.value),
     ) ?? [],
   ),
 );
 
 const selectedBuilding = computed(
-  () => VENUE_FILTERS.find((venue) => venue.key === selectedVenue.value)?.building,
+  () => venues.value.find((venue) => venue.key === selectedVenue.value)?.name,
 );
 
 const { listId: favoritesListId, events: favoriteEvents } = useFavorites();
@@ -105,8 +110,8 @@ useHead({ title: "KIKK 2026 Timetable" });
             "
           >
             <option value="all">All venues</option>
-            <option v-for="venue in VENUE_FILTERS" :key="venue.key" :value="venue.key">
-              {{ venue.building }}
+            <option v-for="venue in venues" :key="venue.key" :value="venue.key">
+              {{ venue.name }}
             </option>
           </select>
           <Icon

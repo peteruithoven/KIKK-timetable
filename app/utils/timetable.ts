@@ -40,24 +40,10 @@ const VENUE_ORDER = [
   "Le Delta",
 ];
 
-export const VENUE_FILTERS = [
-  { key: "theatre", building: "Théâtre de Namur" },
-  { key: "bourse", building: "La Bourse" },
-  { key: "delta", building: "Le Delta" },
-] as const;
-
-export type VenueFilter = (typeof VENUE_FILTERS)[number]["key"];
-
 /** `"La Bourse — Auditoire Rops"` → building `"La Bourse"`, room `"Auditoire Rops"`. */
 export function venueParts(venue: string): { building: string | null; room: string } {
   const [building, room] = venue.split(" — ");
   return room ? { building: building!, room } : { building: null, room: venue };
-}
-
-export function isInBuilding(event: TimetableEvent, filter: VenueFilter): boolean {
-  if (!event.venue) return false;
-  const { building, room } = venueParts(event.venue);
-  return (building ?? room) === VENUE_FILTERS.find((v) => v.key === filter)?.building;
 }
 
 function toMinutes(hhmm: string): number {
