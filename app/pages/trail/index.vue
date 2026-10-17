@@ -44,7 +44,13 @@ useSeoMeta({
       <p v-if="error && !data" class="mt-8 text-neutral-500">
         The art trail couldn't be loaded. Please try again later.
       </p>
-      <section v-for="group in groups" :key="group.name" class="mt-10">
+      <!-- Anchors for the map's links, clear of the sticky nav. -->
+      <section
+        v-for="group in groups"
+        :id="group.key ?? undefined"
+        :key="group.name"
+        class="mt-10 scroll-mt-20"
+      >
         <div class="flex items-baseline justify-between gap-4 border-b border-ink pb-2">
           <h2 class="font-display text-lg leading-tight font-bold tracking-tight uppercase">
             {{ group.name }}

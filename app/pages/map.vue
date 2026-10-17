@@ -12,6 +12,35 @@ const router = useRouter();
 const highlightedVenue = computed(() =>
   typeof route.query.venue === "string" ? route.query.venue : null,
 );
+const selectedVenue = computed(() => VENUES.find((venue) => venue.key === highlightedVenue.value));
+
+// For the links in the venue bar.
+const [{ data: schedule }, { data: trail }] = await Promise.all([useSchedule(), useTrail()]);
+
+const eventsPath = computed(() => {
+  const key = selectedVenue.value?.key;
+  const dates = schedule.value?.events
+    .filter((event) => findVenue(event.venue)?.key === key)
+    .map((event) => event.date)
+    .sort();
+  if (!key || !dates?.length) return null;
+  // The timetable opens on today during the festival, otherwise pick the venue's first day.
+  return dates.includes(festivalToday()) ? `/?venue=${key}` : `/?venue=${key}&day=${dates[0]}`;
+});
+
+const trailPath = computed(() => {
+  const key = selectedVenue.value?.key;
+  const hasInstallations = trail.value?.installations.some(
+    (installation) => findVenue(installation.venue)?.key === key,
+  );
+  return key && hasInstallations ? `/trail#${key}` : null;
+});
+
+function selectVenue(key: string | null) {
+  // Replace, so Back still goes back to where the map was opened from.
+  const { venue: _, ...query } = route.query;
+  router.replace({ query: key ? { ...query, venue: key } : query });
+}
 
 const container = useTemplateRef<HTMLDivElement>("container");
 let map: MapLibreMap | undefined;
@@ -34,11 +63,7 @@ onMounted(async () => {
   });
   instance.once("load", () => {
     addVenueLayer(instance, highlightedVenue.value);
-    onVenueClick(instance, (key) => {
-      // Replace, so Back still goes back to where the map was opened from.
-      const { venue: _, ...query } = route.query;
-      router.replace({ query: key ? { ...query, venue: key } : query });
-    });
+    onVenueClick(instance, selectVenue);
     layersAdded = true;
   });
   map = instance;
@@ -82,6 +107,13 @@ useSeoMeta({ title: "Map · KIKK 2026" });
         @zoom-out="map?.zoomOut()"
       />
     </div>
+    <MapVenueBar
+      v-if="selectedVenue"
+      :venue="selectedVenue"
+      :events-path="eventsPath"
+      :trail-path="trailPath"
+      @close="selectVenue(null)"
+    />
   </div>
 </template>
 

@@ -4,6 +4,8 @@ export type TrailItem = Pick<Installation, "id" | "slug" | "title" | "venue" | "
 };
 
 export interface TrailGroup {
+  /** Of the place on the map, also the group's anchor on /trail. */
+  key: string | null;
   name: string;
   mapPath: string | null;
   items: TrailItem[];
@@ -25,7 +27,10 @@ export function groupByVenue(items: TrailItem[]): TrailGroup[] {
     let entry = groups.get(name);
     if (!entry) {
       const mapPath = place ? venueMapPath(place.name) : null;
-      entry = { group: { name, mapPath, items: [] }, latitude: place?.coordinates[1] ?? -Infinity };
+      entry = {
+        group: { key: place?.key ?? null, name, mapPath, items: [] },
+        latitude: place?.coordinates[1] ?? -Infinity,
+      };
       groups.set(name, entry);
     }
     entry.group.items.push(item);

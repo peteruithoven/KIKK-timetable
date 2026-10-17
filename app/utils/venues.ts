@@ -40,3 +40,12 @@ export function venueMapPath(venue: string): string | null {
   const key = findVenue(venue)?.key;
   return key ? `/map?venue=${key}` : null;
 }
+
+/**
+ * Directions in Google Maps (its app when installed). There's no well supported link that lets
+ * people pick their own maps app, `geo:` URIs don't work on iOS and desktop.
+ */
+export function venueDirectionsUrl(venue: Venue): string {
+  const [longitude, latitude] = venue.coordinates;
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+}
