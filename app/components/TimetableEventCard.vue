@@ -5,6 +5,8 @@ const props = defineProps<{
   height: number;
   /** Likely in view on load: the image loads right away, with high priority. */
   priority?: boolean;
+  /** CSS width of the card, for the image's `sizes`. */
+  width: string;
 }>();
 
 const LINE_HEIGHT = 16; // leading-4
@@ -17,6 +19,17 @@ const { isFavorite } = useFavorites();
 const favorite = computed(() => isFavorite(props.event.id));
 
 const showImage = computed(() => Boolean(props.event.image) && props.height >= 64);
+
+// The browser picks a size for the card's width and the screen's pixel density. The image covers
+// its area, so a landscape image in a tall card is scaled by height: the image's height (below a
+// one line title) is a lower bound. Not more than 400px wide, the size these cards always had.
+const IMAGE_WIDTHS = [200, 300, 400];
+const srcset = computed(() =>
+  IMAGE_WIDTHS.map((width) => `${resizedImage(props.event.image!, width)} ${width}w`).join(", "),
+);
+const sizes = computed(
+  () => `max(${props.width}, ${props.height - BORDER - MARGIN - LINE_HEIGHT}px)`,
+);
 
 // Too short for the margin around the title, e.g. 10 minute events: one line, no margin.
 const compact = computed(() => props.height - BORDER < LINE_HEIGHT + MARGIN);
@@ -62,6 +75,8 @@ const titleStyle = computed(() => {
     <img
       v-if="showImage"
       :src="resizedImage(event.image!, 400)"
+      :srcset="srcset"
+      :sizes="sizes"
       crossorigin="anonymous"
       alt=""
       :loading="priority ? 'eager' : 'lazy'"

@@ -12,6 +12,7 @@ declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | s
 
 const OFFLINE_PAGE = "/offline.html";
 const NETWORK_TIMEOUT_SECONDS = 3;
+const IMAGES_CACHE = "images";
 
 // App code, fonts and icons, so every page can open offline, also ones not visited yet.
 const manifest = self.__WB_MANIFEST;
@@ -54,7 +55,7 @@ registerRoute(
   ({ url, sameOrigin, request }) =>
     !sameOrigin && request.destination === "image" && url.pathname.startsWith("/storage/v1/"),
   new CacheFirst({
-    cacheName: "images",
+    cacheName: IMAGES_CACHE,
     plugins: [
       new CacheableResponsePlugin({ statuses: [200] }),
       new ExpirationPlugin({
@@ -62,6 +63,16 @@ registerRoute(
         maxAgeSeconds: 30 * 24 * 60 * 60,
         purgeOnQuotaError: true,
       }),
+      // Timetable images come in several sizes (srcset), and the browser can ask for another
+      // one after zooming or rotating. Offline, any cached size of the image will do.
+      {
+        handlerDidError: async ({ request }) => {
+          const cache = await caches.open(IMAGES_CACHE);
+          const path = new URL(request.url).pathname;
+          const key = (await cache.keys()).find((cached) => new URL(cached.url).pathname === path);
+          return key && cache.match(key);
+        },
+      },
     ],
   }),
 );

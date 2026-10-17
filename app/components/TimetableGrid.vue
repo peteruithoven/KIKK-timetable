@@ -33,6 +33,11 @@ const gridStyle = computed(() => {
   };
 });
 
+// The width of a venue column, as gridStyle lays it out in the full width timetable scroller.
+const columnWidth = computed(
+  () => `max(${VENUE_COLUMN}, (100vw - ${TIME_COLUMN}) / ${props.timetable.venues.length})`,
+);
+
 // Hour lines, with a fainter line on the half hour.
 const columnStyle = computed(() => ({
   height: `${height.value}px`,
@@ -164,6 +169,7 @@ const nowTop = computed(() => {
         :event="placed.event"
         :height="placed.duration * pxPerMinute - 2"
         :priority="index < PRIORITY_COLUMNS && placed.top * pxPerMinute < PRIORITY_HEIGHT"
+        :width="`(${columnWidth}) / ${placed.lanes} - 4px`"
         :style="{
           top: `${placed.top * pxPerMinute + 1}px`,
           left: `calc(${(placed.lane / placed.lanes) * 100}% + 2px)`,
