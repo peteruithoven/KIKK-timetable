@@ -46,8 +46,58 @@ async function createListId(): Promise<string> {
   }
 }
 
-export function readList(id: string): Promise<FavoritesList | null> {
-  return storage().getItem<FavoritesList>(storageKey(id));
+/**
+ * As stored. `paths` links each favorite to its `kind/slug`, so a favorite can be found again
+ * when Kikk deletes and re-creates an event under a new id.
+ */
+interface StoredList extends FavoritesList {
+  paths?: Record<string, string>;
+}
+
+const eventPath = (event: Pick<FestivalEvent, "kind" | "slug">) => `${event.kind}/${event.slug}`;
+
+/** Links favorites to the current schedule: follows re-created events by slug and fills in slugs. */
+async function reconcile(event: H3Event, list: StoredList): Promise<StoredList> {
+  const { events } = await getFestivalEvents(event);
+  const byId = new Map(events.map((e) => [e.id, e]));
+  const byPath = new Map(events.map((e) => [eventPath(e), e]));
+  const ids = new Set<string>();
+  const paths: Record<string, string> = {};
+  for (const id of list.events) {
+    const path = list.paths?.[id];
+    const current = byId.get(id) ?? (path ? byPath.get(path) : undefined);
+    if (current) {
+      ids.add(current.id);
+      paths[current.id] = eventPath(current);
+    } else {
+      // Not in the schedule (anymore). Kept, in case it returns.
+      ids.add(id);
+      if (path) paths[id] = path;
+    }
+  }
+  return { ...list, events: [...ids], paths };
+}
+
+function toPublic({ id, events, updatedAt }: StoredList): FavoritesList {
+  return { id, events, updatedAt };
+}
+
+export function readList(event: H3Event, id: string): Promise<FavoritesList | null> {
+  return withLock(id, async () => {
+    const stored = await storage().getItem<StoredList>(storageKey(id));
+    if (!stored) return null;
+    const reconciled = await reconcile(event, stored);
+    if (JSON.stringify(reconciled) === JSON.stringify({ ...stored, paths: stored.paths ?? {} })) {
+      return toPublic(stored);
+    }
+    const eventsChanged = reconciled.events.join() !== stored.events.join();
+    const list = {
+      ...reconciled,
+      updatedAt: eventsChanged ? new Date().toISOString() : stored.updatedAt,
+    };
+    await storage().setItem(storageKey(id), list);
+    return toPublic(list);
+  });
 }
 
 // Serializes changes per list, so concurrent requests don't overwrite each other.
@@ -62,13 +112,14 @@ function withLock<T>(id: string, task: () => Promise<T>): Promise<T> {
 
 /** Applies changes to a list. Creates it when `create` is set, otherwise returns null when missing. */
 export async function updateList(
+  event: H3Event,
   id: string | undefined,
   changes: ListChanges,
   { create = false } = {},
 ): Promise<FavoritesList | null> {
   const listId = id ?? (await createListId());
   return withLock(listId, async () => {
-    const current = await readList(listId);
+    const current = await storage().getItem<StoredList>(storageKey(listId));
     if (!current && !create) return null;
     const events = new Set(current?.events);
     for (const eventId of changes.add ?? []) events.add(eventId);
@@ -76,9 +127,14 @@ export async function updateList(
     if (events.size > MAX_EVENTS) {
       throw createError({ statusCode: 422, statusMessage: `At most ${MAX_EVENTS} favorites` });
     }
-    const list = { id: listId, events: [...events], updatedAt: new Date().toISOString() };
+    const list = await reconcile(event, {
+      id: listId,
+      events: [...events],
+      paths: current?.paths,
+      updatedAt: new Date().toISOString(),
+    });
     await storage().setItem(storageKey(listId), list);
-    return list;
+    return toPublic(list);
   });
 }
 
