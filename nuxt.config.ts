@@ -46,6 +46,11 @@ export default defineNuxtConfig({
     "@fontsource/poppins/400.css",
     "~/assets/css/main.css",
   ],
+  features: {
+    // All CSS in the page, not only that of components: the stylesheet is small and would block
+    // the first render.
+    inlineStyles: true,
+  },
   app: {
     head: {
       title: "kikk-timetable",

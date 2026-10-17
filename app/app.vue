@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import interTight from "@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2?url";
+import poppins300 from "@fontsource/poppins/files/poppins-latin-300-normal.woff2?url";
+import poppins400 from "@fontsource/poppins/files/poppins-latin-400-normal.woff2?url";
 
 // Defaults for link previews (WhatsApp, Signal, …). Event and art trail pages set their own image.
 // Behind the reverse proxy the app itself is reached over plain http.
@@ -25,8 +27,14 @@ const imageOrigin = useState("image-origin", () =>
 useHead({
   link: [
     { rel: "canonical", href: pageUrl },
-    // The display font's Latin subset, so headings don't wait for the stylesheet to request it.
-    { rel: "preload", as: "font", type: "font/woff2", href: interTight, crossorigin: "anonymous" },
+    // The fonts' Latin subsets, so text doesn't wait for the browser to find them in the styles.
+    ...[interTight, poppins300, poppins400].map((href) => ({
+      rel: "preload" as const,
+      as: "font" as const,
+      type: "font/woff2",
+      href,
+      crossorigin: "anonymous" as const,
+    })),
     // Anonymous, like the images (crossorigin="anonymous"), or the connection can't be reused.
     ...(imageOrigin.value
       ? [{ rel: "preconnect" as const, href: imageOrigin.value, crossorigin: "anonymous" as const }]
