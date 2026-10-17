@@ -34,7 +34,8 @@ This is a Nuxt 4 app styled with Tailwind CSS v4. Vite+ provides the tooling (ch
 
 - Use `vp run dev`, `vp run build`, `vp run generate` and `vp run preview`. These scripts call `nuxt`. The built-ins `vp dev` and `vp build` start plain Vite and do not work for this app.
 - `vp run postinstall` runs `nuxt prepare`, which regenerates the types in `.nuxt/`. Run it if types for auto-imports or components are missing.
-- `vp check` does not type-check code inside `.vue` files.
+- `vp check` does not type-check code inside `.vue` files. Use `pnpm --package=vue-tsc@3 --package=typescript@6.0.3 dlx vue-tsc --noEmit -p .nuxt/tsconfig.app.json`. Without the TypeScript pin, dlx pulls TypeScript 7, which vue-tsc can't load.
+- `npx` refuses to run here (pnpm `devEngines`). Use `vp exec <bin>`, e.g. `vp exec tsc -p service-worker/tsconfig.json` for the service worker.
 
 ## Configuration
 
@@ -51,3 +52,48 @@ This is a Nuxt 4 app styled with Tailwind CSS v4. Vite+ provides the tooling (ch
 - Tailwind v4 is CSS-first: there is no `tailwind.config.js`. It is loaded through `@tailwindcss/vite` in `nuxt.config.ts`.
 - The entry stylesheet is `app/assets/css/main.css`. Add theme tokens there with `@theme`.
 - Do not add `@nuxtjs/tailwindcss` or a PostCSS config.
+
+# Project notes
+
+Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkfestival.be.
+
+## Data
+
+- Source: Kikk's Supabase REST API, tables `conferences` (talks), `by_night_events` (parties) and `panels`, filtered on `status=eq.published`. Same queries as kikkfestival.be/schedule. Credentials come from `NUXT_SUPABASE_URL` / `NUXT_SUPABASE_KEY` (the public anon key in the kikkfestival.be JS bundle). `.env.example` leaves them empty on purpose.
+- `server/utils/kikk-api.ts` fetches, `kikk-mapping.ts` maps rows to `FestivalEvent` (`shared/types/festival-event.ts`), `kikk-cache.ts` serves `/api/events`: memory, then `.data/kv` (Nitro `data` storage), then the committed fallback `server/assets/kikk-snapshot.json`. Refresh that with `vp run snapshot` (excluded from formatting).
+- `kikk-api.ts` must not use Nitro auto-imports: `scripts/update-snapshot.ts` imports it and runs on plain Node.
+- Row quirks: talks use `date`, others `event_date`. Times are `HH:mm:ss`, parties end past midnight, some have no end. The venue is in `room_name`, `location` or `venue`, sometimes `""`. `description` is French, `description_en` English. CMS HTML is sanitized in `kikk-mapping.ts`; a lone `<br />` counts as empty.
+- Event ids are `kind:uuid`. Pages are `/<kind>/<slug>` (`talk`, `panel`, `party`), backed by `/api/events/<kind>/<slug>`.
+- Images: `resizedImage()` uses Supabase's `/storage/v1/render/image/` endpoint. Keep `crossorigin="anonymous"` on event images, the service worker relies on it.
+
+## Favorites
+
+- No accounts. Lists live in Nitro storage as `favorites:<id>` (ids like `brave-otter-4821`), via `/api/lists`. The id is the share link (`/list/<id>`) and gives edit access.
+- The server sets the `kikk-list` cookie (server-set cookies survive Safari's 7 day cleanup). `app/plugins/favorites.ts` loads the list during SSR. `useFavorites` updates optimistically, queues unsaved changes and keeps a localStorage backup that can recreate the list.
+- Stored lists keep a `paths` map (event id to `kind/slug`) so favorites follow events Kikk re-creates under a new id. It's internal, the API doesn't return it.
+- `/api/lists/<id>/calendar.ics` is a subscribable calendar (`server/utils/ical.ts`).
+
+## Offline / PWA
+
+- `@vite-pwa/nuxt` with a custom worker in `service-worker/sw.ts` (own `tsconfig.json`). It only runs in production builds. The manifest is `public/site.webmanifest` (`manifest: false` in the module).
+- The module strips `.html` from precached URLs, so `public/offline.html` is cached in the worker's install step instead. Don't add `html` to `globPatterns`.
+
+## UI
+
+- Kikk style: black (`ink`) and white, a little gray, no rounded corners, Inter Tight (`font-display`) and Poppins, self-hosted through Fontsource. Tokens are in `app/assets/css/main.css`.
+- Cut top right corner: `clip-corner` for filled elements (bevel, `clip-path` fallback) and `bevel-corner` for outlined ones (bevel only; a `clip-path` would leave a gap in the border).
+- Icons: `<Icon name="material-symbols:…">` from the locally installed `@iconify-json/material-symbols`. The Iconify API fallback is off, so install the `@iconify-json/*` package before using another set, then restart the dev server.
+- Timetable: everything scales with `pxPerMinute` (pinch zoom, `useVerticalZoom`). The body cells of the grid have explicit grid positions so the favorites bar layer can overlap them. Favorite bars are sticky, positioned with a spacer (a margin can't move out of a sticky container), and shown only when their block is out of view (IntersectionObserver).
+- `public/favicon.svg` was edited after RealFaviconGenerator: no dark-mode invert (it made the Firefox Android home screen icon white on white).
+
+## Gotchas
+
+- Nuxt 4.6: in app code use `createError({ status, statusText })`; `statusCode`/`statusMessage` are deprecated. Server code (h3 v1) still uses `statusCode`.
+- `$fetch` to typed routes with template strings can hit "excessive stack depth"; pass the type, e.g. `$fetch<FavoritesList>(…)`.
+- The formatter rewrites unicode escapes of invisible characters (like the non-breaking space) into the literal character, also in Markdown. In regexes use `\p{Zs}` with the `u` flag.
+- The user usually runs the dev server on port 3000. Editing `nuxt.config.ts` restarts it. `vp run build` writes the `.nuxt` folder it uses, so test production builds with Docker instead: `docker build -t kikk-timetable:test .` and `docker run --env-file .env -p 3125:3000 kikk-timetable:test`.
+- Browser testing: Chrome is at `/usr/bin/google-chrome`; drive it with `puppeteer-core` installed outside the project.
+
+## Deployment
+
+- Docker Compose on a VPS behind an HTTPS reverse proxy that must send `X-Forwarded-Proto` and `X-Forwarded-Host` (secure cookie, absolute links). The `data` volume (`/app/.data`) holds favorites and the schedule cache; back it up.
