@@ -1,7 +1,16 @@
 export type TimetableEvent = Pick<
   FestivalEvent,
   "id" | "kind" | "slug" | "title" | "date" | "start" | "end" | "startsAt" | "venue" | "image"
->;
+> & {
+  /** Speaker names for the card, null when there are none or they're the title. */
+  speakers: string | null;
+};
+
+export function speakerLine(event: FestivalEvent): string | null {
+  const names = event.speakers.map((speaker) => speaker.name).join(", ");
+  if (!names || names.toLowerCase() === event.title.trim().toLowerCase()) return null;
+  return names;
+}
 
 export interface PlacedEvent {
   event: TimetableEvent;

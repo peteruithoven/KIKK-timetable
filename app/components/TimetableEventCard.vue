@@ -30,7 +30,7 @@ const titleStyle = computed(() => {
   <NuxtLink
     :to="eventPath(event)"
     :data-favorite="favorite ? event.id : undefined"
-    :title="`${event.start}${event.end ? `–${event.end}` : ''} · ${event.title}`"
+    :title="`${event.start}${event.end ? `–${event.end}` : ''} · ${event.title}${event.speakers ? ` · ${event.speakers}` : ''}`"
     class="group absolute flex flex-col overflow-hidden border transition-colors focus-visible:outline-none"
     :class="
       favorite
@@ -52,6 +52,10 @@ const titleStyle = computed(() => {
         /><span class="sr-only">Favorite: </span>
       </template>
       {{ event.title }}
+      <!-- Inside the clamped title, so it only gets the lines the title leaves. Same leading. -->
+      <template v-if="event.speakers">
+        <br /><span class="text-[11px] font-normal opacity-70">{{ event.speakers }}</span>
+      </template>
     </span>
     <img
       v-if="showImage"

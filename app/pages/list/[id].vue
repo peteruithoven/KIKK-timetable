@@ -169,8 +169,11 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
                 <span class="block font-display leading-tight font-semibold">
                   {{ event.title }}
                 </span>
-                <span v-if="event.venue" class="mt-0.5 block text-xs text-neutral-500">
-                  {{ event.venue }}
+                <span
+                  v-if="event.speakers || event.venue"
+                  class="mt-0.5 block text-xs text-neutral-500"
+                >
+                  {{ [event.speakers, event.venue].filter(Boolean).join(" · ") }}
                 </span>
               </span>
             </NuxtLink>

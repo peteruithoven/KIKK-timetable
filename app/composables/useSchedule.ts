@@ -16,6 +16,7 @@ export function useSchedule() {
         startsAt: event.startsAt,
         venue: event.venue,
         image: event.image,
+        speakers: speakerLine(event),
       })),
     }),
   });
