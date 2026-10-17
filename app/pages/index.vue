@@ -89,21 +89,23 @@ useHead({ title: "KIKK 2026 Timetable" });
           <p
             class="font-display text-[11px] font-semibold tracking-[0.3em] text-neutral-500 uppercase"
           >
-            KIKK Festival 2026
+            KIKK <span class="max-sm:hidden">Festival</span> 2026
           </p>
-          <h1 class="font-display text-3xl leading-none font-extrabold tracking-tight uppercase">
+          <h1
+            class="font-display text-2xl sm:text-3xl leading-none font-extrabold tracking-tight uppercase"
+          >
             Timetable
           </h1>
           <p v-if="!online || data?.stale" class="mt-1 text-xs text-neutral-500">
             Offline · as of {{ updatedAt }}
           </p>
         </div>
-        <!-- Icons only on phones, where the labels don't fit next to the title. -->
+        <!-- Square icons on phones, where the labels don't fit next to the title. -->
         <nav aria-label="Menu" class="flex shrink-0 gap-2">
           <NuxtLink
             v-if="favoritesListId && favoriteEvents.length"
             :to="listPath(favoritesListId)"
-            class="inline-flex items-center gap-1.5 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+            class="inline-flex items-center gap-1.5 bevel-corner border border-line p-2 sm:px-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
           >
             <Icon name="material-symbols:star-outline" class="size-4" aria-hidden="true" />
             <span class="max-sm:sr-only">Favorites</span>
@@ -111,17 +113,24 @@ useHead({ title: "KIKK 2026 Timetable" });
           </NuxtLink>
           <NuxtLink
             to="/trail"
-            class="inline-flex items-center gap-1.5 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+            class="inline-flex items-center gap-1.5 bevel-corner border border-line p-2 sm:px-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
           >
             <Icon name="material-symbols:palette-outline" class="size-4" aria-hidden="true" />
             <span class="max-sm:sr-only">Art trail</span>
           </NuxtLink>
           <NuxtLink
             to="/map"
-            class="inline-flex items-center gap-1.5 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+            class="inline-flex items-center gap-1.5 bevel-corner border border-line p-2 sm:px-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
           >
             <Icon name="material-symbols:map-outline" class="size-4" aria-hidden="true" />
             <span class="max-sm:sr-only">Map</span>
+          </NuxtLink>
+          <NuxtLink
+            to="/about"
+            class="inline-flex items-center bevel-corner border border-line p-2 transition-colors hover:border-ink"
+          >
+            <Icon name="material-symbols:info-outline" class="size-4" aria-hidden="true" />
+            <span class="sr-only">About</span>
           </NuxtLink>
         </nav>
       </div>
