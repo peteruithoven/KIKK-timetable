@@ -5,10 +5,17 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // added as an asset here.
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 
+const route = useRoute();
 const router = useRouter();
+
+// `/map?venue=bourse`, see VENUES for the keys.
+const highlightedVenue = computed(() =>
+  typeof route.query.venue === "string" ? route.query.venue : null,
+);
 
 const container = useTemplateRef<HTMLDivElement>("container");
 let map: MapLibreMap | undefined;
+let layersAdded = false;
 
 onMounted(async () => {
   // MapLibre needs WebGL and the DOM, and it's big, so it's only loaded on this page.
@@ -25,8 +32,15 @@ onMounted(async () => {
     // The full text instead of an info button.
     attributionControl: { compact: false },
   });
-  instance.once("load", () => addVenueLayer(instance));
+  instance.once("load", () => {
+    addVenueLayer(instance, highlightedVenue.value);
+    layersAdded = true;
+  });
   map = instance;
+});
+
+watch(highlightedVenue, (key) => {
+  if (map && layersAdded) highlightVenue(map, key);
 });
 
 onBeforeUnmount(() => map?.remove());

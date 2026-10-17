@@ -1,4 +1,8 @@
-import type { Map as MapLibreMap } from "maplibre-gl";
+import type { ExpressionSpecification, Map as MapLibreMap } from "maplibre-gl";
+
+const VENUE_LAYER = "venues";
+/** Of the venues other than the highlighted one. */
+const DIMMED_OPACITY = 0.4;
 
 const PIN_IMAGE = "pin";
 const PIN_SIZE = 12;
@@ -9,7 +13,7 @@ const PIN_PIXEL_RATIO = 2;
  * Venue pins with their names. A map layer rather than HTML markers, so MapLibre hides labels
  * that would overlap. Call once the map's style has loaded.
  */
-export function addVenueLayer(map: MapLibreMap) {
+export function addVenueLayer(map: MapLibreMap, highlighted: string | null = null) {
   addPinImage(map);
   map.addSource("venues", {
     type: "geojson",
@@ -23,7 +27,7 @@ export function addVenueLayer(map: MapLibreMap) {
     },
   });
   map.addLayer({
-    id: "venues",
+    id: VENUE_LAYER,
     type: "symbol",
     source: "venues",
     layout: {
@@ -46,6 +50,17 @@ export function addVenueLayer(map: MapLibreMap) {
       "text-halo-width": 1.5,
     },
   });
+  highlightVenue(map, highlighted);
+}
+
+/** Dims the other venues, `null` shows them all as normal. Keeps the view as it is. */
+export function highlightVenue(map: MapLibreMap, key: string | null) {
+  const dimmed: ExpressionSpecification | boolean = key ? ["!=", ["get", "key"], key] : false;
+  const opacity: ExpressionSpecification = ["case", dimmed, DIMMED_OPACITY, 1];
+  map.setPaintProperty(VENUE_LAYER, "icon-opacity", opacity);
+  map.setPaintProperty(VENUE_LAYER, "text-opacity", opacity);
+  // Placed first, so its label isn't the one hidden when labels overlap.
+  map.setLayoutProperty(VENUE_LAYER, "symbol-sort-key", ["case", dimmed, 1, 0]);
 }
 
 /** White square with the cut top right corner of the Kikk style. */
