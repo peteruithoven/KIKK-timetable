@@ -87,6 +87,8 @@ function venueLayerSpecification(key: string): SymbolLayerSpecification {
       "text-letter-spacing": 0.1,
       "text-variable-anchor": ["left", "right", "top", "bottom"],
       "text-radial-offset": 0.9,
+      // Multi-line labels aligned towards their pin.
+      "text-justify": "auto",
       // Pins stay when their label doesn't fit, zooming in brings it back.
       "text-optional": true,
     },

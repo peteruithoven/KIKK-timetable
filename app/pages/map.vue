@@ -62,7 +62,7 @@ onMounted(async () => {
   });
   instance.setStyle("https://tiles.openfreemap.org/styles/dark", {
     // Runs when the style has been fetched, so it picks up a highlight changed in the meantime.
-    transformStyle: (_, style) => withVenueLayers(style, highlightedVenue.value),
+    transformStyle: (_, style) => withVenueLayers(withStyleTweaks(style), highlightedVenue.value),
   });
   addPinImage(instance);
   instance.once("style.load", () => {
