@@ -1,11 +1,12 @@
 services:
   app:
+    container_name: "kikk-timetable"
     build: .
     restart: unless-stopped
     # NUXT_SUPABASE_URL and NUXT_SUPABASE_KEY, see .env.example.
     env_file: .env
     ports:
-      - "3000:3000"
+      - ${NODE_PORT}:3000
     volumes:
       # Favorites and the last fetched schedule. Survives restarts and rebuilds.
       - data:/app/.data
