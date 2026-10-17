@@ -5,6 +5,18 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-16",
   devtools: { enabled: true },
+  $development: {
+    hooks: {
+      // The link preview card, see og-image/OgImage.vue.
+      "pages:extend"(pages) {
+        pages.push({
+          name: "og-image",
+          path: "/og-image",
+          file: fileURLToPath(new URL("./og-image/OgImage.vue", import.meta.url)),
+        });
+      },
+    },
+  },
   modules: ["@nuxt/icon", "@vite-pwa/nuxt"],
   icon: {
     // Icon sets come from installed @iconify-json/* packages, never the public Iconify API.

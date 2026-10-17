@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* The link preview card, outside app/. */
+@source "../../../og-image";
 
 /* Kikk's look: black on white, a little gray, no rounded corners. */
 @theme static {
