@@ -46,7 +46,10 @@ function richHtml(value: string | null | undefined): string | null {
         .split(/\n\s*\n/)
         .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
         .join("");
-  return text(sanitizeHtml(html, RICH_TEXT_OPTIONS));
+  const clean = sanitizeHtml(html, RICH_TEXT_OPTIONS);
+  // Only markup, e.g. a lone `<br />` left by the editor, counts as empty.
+  const hasText = /\S/u.test(clean.replace(/<[^>]*>|&nbsp;/g, "").replace(/\p{Zs}/gu, " "));
+  return hasText ? text(clean) : null;
 }
 
 function escapeHtml(value: string): string {
