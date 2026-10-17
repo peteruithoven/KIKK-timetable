@@ -3,6 +3,8 @@ const props = defineProps<{
   event: TimetableEvent;
   /** Card height in px. */
   height: number;
+  /** Likely in view on load: the image loads right away, with high priority. */
+  priority?: boolean;
 }>();
 
 const LINE_HEIGHT = 16; // leading-4
@@ -62,7 +64,8 @@ const titleStyle = computed(() => {
       :src="resizedImage(event.image!, 400)"
       crossorigin="anonymous"
       alt=""
-      loading="lazy"
+      :loading="priority ? 'eager' : 'lazy'"
+      :fetchpriority="priority ? 'high' : undefined"
       decoding="async"
       class="min-h-0 w-full flex-1 object-cover"
     />

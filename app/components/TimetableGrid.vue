@@ -11,6 +11,9 @@ const pxPerMinute = computed(() => PX_PER_MINUTE * (props.zoom ?? 1));
 const TIME_COLUMN = "3.5rem";
 const VENUE_COLUMN = "10rem";
 const NuxtLink = resolveComponent("NuxtLink");
+// What a phone shows before scrolling, for the largest contentful paint: their images load first.
+const PRIORITY_COLUMNS = 2;
+const PRIORITY_HEIGHT = 800;
 
 const height = computed(() => props.timetable.length * pxPerMinute.value);
 
@@ -160,6 +163,7 @@ const nowTop = computed(() => {
         :key="placed.event.id"
         :event="placed.event"
         :height="placed.duration * pxPerMinute - 2"
+        :priority="index < PRIORITY_COLUMNS && placed.top * pxPerMinute < PRIORITY_HEIGHT"
         :style="{
           top: `${placed.top * pxPerMinute + 1}px`,
           left: `calc(${(placed.lane / placed.lanes) * 100}% + 2px)`,
