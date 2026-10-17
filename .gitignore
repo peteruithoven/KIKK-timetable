@@ -37,3 +37,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Server backups (contain user data), see the server:backup script
+backups/

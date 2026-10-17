@@ -10,13 +10,16 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "prepare": "vp config",
-    "snapshot": "node --env-file-if-exists=.env scripts/update-snapshot.ts"
+    "snapshot": "node --env-file-if-exists=.env scripts/update-snapshot.ts",
+    "server:deploy": "ssh kikk@bratwurst 'cd ~/KIKK-timetable && git pull --ff-only && docker compose up -d --build'",
+    "server:backup": "mkdir -p backups && ssh kikk@bratwurst 'docker cp kikk-timetable:/app/.data - | gzip' > backups/kikk-data-$(date +%Y-%m-%d-%H%M).tar.gz"
   },
   "dependencies": {
     "@fontsource-variable/inter-tight": "^5.3.0",
     "@fontsource/poppins": "^5.3.0",
     "@nuxt/icon": "^2.5.1",
     "@tailwindcss/vite": "^4.3.3",
+    "maplibre-gl": "^6.14.0",
     "nuxt": "^4.6.2",
     "sanitize-html": "^2.18.1",
     "tailwindcss": "^4.3.3",
