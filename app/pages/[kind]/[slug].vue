@@ -45,9 +45,18 @@ function goBack(clickEvent: MouseEvent) {
   }
 }
 
+// With the speaker, who people are more likely to search for than the talk's title.
+const pageTitle = computed(() => {
+  const title = event.value?.title ?? "";
+  const speaker = event.value?.kind === "talk" ? event.value.speakers[0]?.name : undefined;
+  return speaker && !title.toLowerCase().includes(speaker.toLowerCase())
+    ? `${title} – ${speaker}`
+    : title;
+});
+
 useSeoMeta({
-  title: () => `${event.value?.title} · KIKK 2026`,
-  ogTitle: () => event.value?.title,
+  title: () => `${pageTitle.value} · KIKK 2026`,
+  ogTitle: pageTitle,
   description: () => plainText(intro.value?.text ?? description.value?.text),
   ...ogImageMeta(() => event.value?.image),
 });
