@@ -13,7 +13,7 @@ const bio = computed(() => localize(props.person.bio));
   <div class="flex gap-4">
     <img
       v-if="person.photo"
-      :src="resizedImage(person.photo, 192)"
+      :src="resizedImage(person.photo, 160, 160)"
       crossorigin="anonymous"
       alt=""
       loading="lazy"

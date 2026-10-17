@@ -9,7 +9,7 @@ const favorite = computed(() => isFavorite(props.item.id));
   <NuxtLink :to="installationPath(item)" class="group block">
     <img
       v-if="item.image"
-      :src="resizedImage(item.image, 600)"
+      :src="resizedImage(item.image, 600, 450)"
       crossorigin="anonymous"
       alt=""
       loading="lazy"

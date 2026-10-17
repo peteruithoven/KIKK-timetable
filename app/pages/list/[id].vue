@@ -190,7 +190,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026" });
             >
               <img
                 v-if="item.image"
-                :src="resizedImage(item.image, 96)"
+                :src="resizedImage(item.image, 96, 96)"
                 crossorigin="anonymous"
                 alt=""
                 loading="lazy"

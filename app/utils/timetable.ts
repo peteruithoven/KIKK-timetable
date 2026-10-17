@@ -135,12 +135,19 @@ export function festivalToday(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
 }
 
-/** Asks Supabase for a resized copy of storage images. */
-export function resizedImage(url: string, width: number): string {
+/**
+ * Asks Supabase for a resized copy of storage images. With a height, it's cropped to fill that
+ * box. Without, it's scaled to the width: Supabase's `cover` would keep the original height and
+ * crop the width instead. Images smaller than asked aren't enlarged.
+ */
+export function resizedImage(url: string, width: number, height?: number): string {
   const original = "/storage/v1/object/public/";
   if (!url.includes(original)) return url;
   const resized = url.replace(original, "/storage/v1/render/image/public/");
-  return `${resized}?width=${width}&quality=75&resize=cover`;
+  const size = height
+    ? `width=${width}&height=${height}&resize=cover`
+    : `width=${width}&resize=contain`;
+  return `${resized}?${size}&quality=75`;
 }
 
 /**

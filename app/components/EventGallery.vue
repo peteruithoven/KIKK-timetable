@@ -10,7 +10,7 @@ defineProps<{ images: string[]; credit?: string | null }>();
       <li v-for="url in images" :key="url" class="shrink-0 snap-start">
         <a :href="url" target="_blank" rel="noopener" class="block">
           <img
-            :src="resizedImage(url, 640)"
+            :src="resizedImage(url, 640, 480)"
             crossorigin="anonymous"
             alt=""
             loading="lazy"

@@ -73,7 +73,7 @@ useSeoMeta({
 
     <img
       v-if="installation.heroImage"
-      :src="resizedImage(installation.heroImage, 1600)"
+      :src="resizedImage(installation.heroImage, 1600, 900)"
       crossorigin="anonymous"
       alt=""
       class="aspect-video max-h-[70vh] w-full bg-ink object-cover"
