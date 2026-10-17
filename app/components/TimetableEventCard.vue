@@ -35,7 +35,7 @@ const titleStyle = computed(() => {
     :class="
       favorite
         ? 'clip-corner border-ink bg-ink text-paper hover:border-neutral-700 hover:bg-neutral-700 focus-visible:border-neutral-700 focus-visible:bg-neutral-700'
-        : 'bevel-corner border-ink bg-paper hover:bg-block focus-visible:bg-block'
+        : 'bevel-corner border-ink bg-paper hover:bg-ink hover:text-paper focus-visible:bg-ink focus-visible:text-paper'
     "
     :style="{ height: `${height}px` }"
   >

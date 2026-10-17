@@ -11,6 +11,14 @@
   --font-display: "Inter Tight Variable", "Helvetica Neue", ui-sans-serif, sans-serif;
 }
 
+/* Tailwind v4 gives buttons the default cursor. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 /*
  * Top right corner cut off at 45°, for outlined elements: the border follows the diagonal.
  * Browsers without corner-shape keep a square corner. Size with --corner.
