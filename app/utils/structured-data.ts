@@ -67,7 +67,6 @@ export function eventStructuredData(event: FestivalEvent, url: string, descripti
     location: place(event.venue),
     performer: performer.length ? performer : undefined,
     organizer: KIKK,
-    superEvent: { "@type": "Festival", name: "KIKK Festival 2026", url: KIKK.url },
     inLanguage: event.language ?? undefined,
     ...(event.ticketUrl && { offers: { "@type": "Offer", url: event.ticketUrl } }),
   };
