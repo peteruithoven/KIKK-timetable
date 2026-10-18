@@ -59,7 +59,13 @@ onMounted(async () => {
     fitBoundsOptions: { padding: 48 },
     // The full text instead of an info button.
     attributionControl: { compact: false },
+    // North up and flat: no rotating or tilting, by mouse, touch or keyboard.
+    dragRotate: false,
+    touchPitch: false,
+    maxPitch: 0,
   });
+  instance.touchZoomRotate.disableRotation();
+  instance.keyboard.disableRotation();
   instance.setStyle("https://tiles.openfreemap.org/styles/dark", {
     // Runs when the style has been fetched, so it picks up a highlight changed in the meantime.
     transformStyle: (_, style) => withVenueLayers(withStyleTweaks(style), highlightedVenue.value),
