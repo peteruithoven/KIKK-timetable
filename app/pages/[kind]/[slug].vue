@@ -54,11 +54,22 @@ const pageTitle = computed(() => {
     : title;
 });
 
+const metaDescription = computed(() => plainText(intro.value?.text ?? description.value?.text));
+
 useSeoMeta({
   title: () => `${pageTitle.value} · KIKK 2026`,
   ogTitle: pageTitle,
-  description: () => plainText(intro.value?.text ?? description.value?.text),
+  description: metaDescription,
   ...ogImageMeta(() => event.value?.image),
+});
+
+const origin = useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin;
+useHead({
+  script: [
+    jsonLdScript(() =>
+      eventStructuredData(event.value!, `${origin}${route.path}`, metaDescription.value),
+    ),
+  ],
 });
 </script>
 

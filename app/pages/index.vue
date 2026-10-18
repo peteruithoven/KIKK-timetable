@@ -78,7 +78,12 @@ const updatedAt = computed(() =>
     : null,
 );
 
-useHead({ title: "KIKK 2026 Timetable" });
+// Lets Google show the site's name in search results.
+const origin = useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin;
+useHead({
+  title: "KIKK 2026 Timetable",
+  script: [jsonLdScript(() => websiteStructuredData(origin))],
+});
 </script>
 
 <template>
