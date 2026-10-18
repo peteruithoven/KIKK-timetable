@@ -3,13 +3,18 @@ const props = defineProps<{
   url: string;
   title: string;
   text?: string;
+  trackingEvent?: "favorites_list_shared";
 }>();
+const { $posthog } = useNuxtApp();
 
 // Not rendered where the browser has no share sheet, like desktop Firefox.
 const canShare = ref(false);
 onMounted(() => (canShare.value = typeof navigator.share === "function"));
 function share() {
-  navigator.share({ title: props.title, text: props.text, url: props.url }).catch(() => {});
+  navigator
+    .share({ title: props.title, text: props.text, url: props.url })
+    .then(() => props.trackingEvent && $posthog?.capture(props.trackingEvent))
+    .catch(() => {});
 }
 </script>
 

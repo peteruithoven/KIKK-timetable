@@ -4,6 +4,13 @@ const props = defineProps<{ id: string }>();
 
 const favorites = useFavorites();
 const favorite = computed(() => favorites.isFavorite(props.id));
+const { $posthog } = useNuxtApp();
+
+function toggle() {
+  const event = favorite.value ? "favorite_removed" : "favorite_added";
+  favorites.toggle(props.id);
+  $posthog?.capture(event, { content_type: props.id.split(":", 1)[0] });
+}
 </script>
 
 <template>
@@ -16,7 +23,7 @@ const favorite = computed(() => favorites.isFavorite(props.id));
         ? 'clip-corner bg-ink text-paper hover:bg-neutral-700'
         : 'hover:bg-ink hover:text-paper'
     "
-    @click="favorites.toggle(id)"
+    @click="toggle"
   >
     <Icon
       :name="favorite ? 'material-symbols:star' : 'material-symbols:star-outline'"

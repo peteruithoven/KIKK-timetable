@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const route = useRoute();
 const router = useRouter();
+const { $posthog } = useNuxtApp();
 
 const { data: event, error } = await useFetch<FestivalEvent>(
   () => `/api/events/${route.params.kind}/${route.params.slug}`,
@@ -43,6 +44,10 @@ function goBack(clickEvent: MouseEvent) {
     clickEvent.preventDefault();
     router.back();
   }
+}
+
+function trackTicketClick() {
+  $posthog?.capture("ticket_link_clicked", { event_kind: event.value?.kind });
 }
 
 // With the speaker, who people are more likely to search for than the talk's title.
@@ -171,6 +176,7 @@ useHead({
           target="_blank"
           rel="noopener"
           class="inline-flex items-center gap-1.5 bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+          @click="trackTicketClick"
         >
           Tickets <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
         </a>

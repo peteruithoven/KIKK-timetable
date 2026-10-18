@@ -12,6 +12,7 @@ if (!list.value) {
 }
 const [{ data: schedule }, { data: trail }] = await Promise.all([useSchedule(), useTrail()]);
 const favorites = useFavorites();
+const { $posthog } = useNuxtApp();
 
 const isOwn = computed(() => favorites.listId.value === id);
 // This device's latest state for its own list, including unsaved changes.
@@ -50,10 +51,15 @@ async function adopt() {
   adopting.value = true;
   try {
     await favorites.adopt(id);
+    $posthog?.capture("favorites_list_adopted");
     await navigateTo("/");
   } finally {
     adopting.value = false;
   }
+}
+
+function startCalendarSubscription(calendarProvider: "google" | "webcal") {
+  $posthog?.capture("calendar_subscription_started", { calendar_provider: calendarProvider });
 }
 
 // Lists are personal, and their link gives edit access.
@@ -92,8 +98,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             class="min-w-0 flex-1 basis-60 border border-line px-3 py-2 text-sm"
             @focus="($event.target as HTMLInputElement).select()"
           />
-          <ShareButton :url="shareUrl" title="My KIKK 2026 favorites" />
-          <CopyButton :value="shareUrl" />
+          <ShareButton
+            :url="shareUrl"
+            title="My KIKK 2026 favorites"
+            tracking-event="favorites_list_shared"
+          />
+          <CopyButton :value="shareUrl" tracking-event="favorites_link_copied" />
         </div>
       </section>
 
@@ -132,6 +142,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           <a
             :href="webcalUrl"
             class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+            @click="startCalendarSubscription('webcal')"
           >
             <Icon name="material-symbols:calendar-add-on" class="size-4" aria-hidden="true" />
             Subscribe
@@ -141,11 +152,16 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             target="_blank"
             rel="noopener"
             class="inline-flex items-center gap-1.5 bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+            @click="startCalendarSubscription('google')"
           >
             Google Calendar
             <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
           </a>
-          <CopyButton :value="calendarUrl" label="Copy calendar link" />
+          <CopyButton
+            :value="calendarUrl"
+            label="Copy calendar link"
+            tracking-event="calendar_link_copied"
+          />
         </div>
       </section>
 

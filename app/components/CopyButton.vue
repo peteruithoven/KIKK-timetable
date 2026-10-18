@@ -3,13 +3,16 @@ const props = withDefaults(
   defineProps<{
     value: string;
     label?: string;
+    trackingEvent?: "favorites_link_copied" | "calendar_link_copied";
   }>(),
   { label: "Copy link" },
 );
 
 const copied = ref(false);
+const { $posthog } = useNuxtApp();
 async function copy() {
   await navigator.clipboard.writeText(props.value);
+  props.trackingEvent && $posthog?.capture(props.trackingEvent);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
 }

@@ -23,6 +23,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "maplibre-gl": "^6.14.0",
     "nuxt": "^4.6.2",
+    "posthog-js": "^1.438.12",
     "sanitize-html": "^2.18.1",
     "tailwindcss": "^4.3.3",
     "uqr": "^0.1.3",

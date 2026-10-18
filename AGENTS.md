@@ -86,6 +86,13 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - `@vite-pwa/nuxt` with a custom worker in `service-worker/sw.ts` (own `tsconfig.json`). It only runs in production builds. The manifest is `public/site.webmanifest` (`manifest: false` in the module).
 - The module strips `.html` from precached URLs, so `public/offline.html` is cached in the worker's install step instead. Don't add `html` to `globPatterns`.
 
+## Analytics
+
+- PostHog (`posthog-js`), client-side only, in `app/plugins/posthog.client.ts`. Components use `$posthog?.capture(…)` from `useNuxtApp()`; it's `undefined` when PostHog isn't configured, which only warns in dev.
+- Configured with `NUXT_PUBLIC_POSTHOG_PROJECT_TOKEN` and `NUXT_PUBLIC_POSTHOG_HOST`, read at runtime (`runtimeConfig.public.posthog` in `nuxt.config.ts`). Don't read `process.env` there: the Docker build has no `.env`.
+- `cookieless_mode: "always"`: PostHog stores nothing in the browser, so there's no cookie banner. Keep it that way; don't call `posthog.identify()`. Cookieless mode must also be on in the PostHog project settings, or events are dropped (still with a 200 response). It also rules out session replay: posthog-js won't record in cookieless mode.
+- `before_send` replaces favorites list ids (they give edit access) with `:id` in every string and key of an event, including URL-encoded ones in calendar links.
+
 ## UI
 
 - Kikk style: black (`ink`) and white, a little gray, no rounded corners, Inter Tight (`font-display`) and Poppins, self-hosted through Fontsource. Tokens are in `app/assets/css/main.css`.
@@ -104,7 +111,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - `$fetch` to typed routes with template strings can hit "excessive stack depth"; pass the type, e.g. `$fetch<FavoritesList>(…)`.
 - The formatter rewrites unicode escapes of invisible characters (like the non-breaking space) into the literal character, also in Markdown. In regexes use `\p{Zs}` with the `u` flag.
 - The user usually runs the dev server on port 3000. Editing `nuxt.config.ts` restarts it. `vp run build` writes the `.nuxt` folder it uses, so test production builds with Docker instead: `docker build -t kikk-timetable:test .` and `docker run --env-file .env -p 3125:3000 kikk-timetable:test`.
-- Browser testing: Chrome is at `/usr/bin/google-chrome`; drive it with `puppeteer-core` installed outside the project.
+- Browser testing: Chrome is at `/usr/bin/google-chrome`; drive it with `puppeteer-core` installed outside the project. PostHog treats a browser with `navigator.webdriver` set as a bot and sends nothing; launch Chrome with `--disable-blink-features=AutomationControlled` to test analytics.
 
 ## Deployment
 

@@ -78,6 +78,13 @@ export default defineNuxtConfig({
     // The art trail app, NUXT_TRAIL_SUPABASE_URL and NUXT_TRAIL_SUPABASE_KEY.
     trailSupabaseUrl: "",
     trailSupabaseKey: "",
+    public: {
+      // NUXT_PUBLIC_POSTHOG_PROJECT_TOKEN and NUXT_PUBLIC_POSTHOG_HOST, read at runtime.
+      posthog: {
+        projectToken: "",
+        host: "",
+      },
+    },
   },
   nitro: {
     storage: {
