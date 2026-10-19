@@ -1,0 +1,9 @@
+[Unit]
+Description=Check for KIKK timetable updates every minute
+
+[Timer]
+# Not OnUnitInactiveSec: that stops firing after a failed run.
+OnCalendar=minutely
+
+[Install]
+WantedBy=timers.target

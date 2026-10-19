@@ -13,7 +13,7 @@
     "prepare": "vp config",
     "snapshot": "node --env-file-if-exists=.env scripts/update-snapshot.ts",
     "og-image": "google-chrome --headless --hide-scrollbars --window-size=1200,630 --virtual-time-budget=5000 --screenshot=public/og-image.png http://localhost:3000/og-image",
-    "server:deploy": "ssh kikk@bratwurst 'cd ~/KIKK-timetable && git pull --ff-only && docker compose up -d --build'",
+    "server:deploy": "ssh kikk@bratwurst '~/KIKK-timetable/deploy/deploy.sh --force'",
     "server:backup": "mkdir -p backups && ssh kikk@bratwurst 'docker cp kikk-timetable:/app/.data - | gzip' > backups/kikk-data-$(date +%Y-%m-%d-%H%M).tar.gz"
   },
   "dependencies": {

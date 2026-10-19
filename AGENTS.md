@@ -122,4 +122,5 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 ## Deployment
 
 - Docker Compose on a VPS behind an HTTPS reverse proxy that must send `X-Forwarded-Proto` and `X-Forwarded-Host` (secure cookie, absolute links). The `data` volume (`/app/.data`) holds favorites and the schedule and art trail caches; back it up.
-- Server: `kikk@bratwurst:~/KIKK-timetable`. `vp run server:deploy` pulls and rebuilds there (push first); `vp run server:backup` downloads `/app/.data` to `backups/` (gitignored, contains user data). Don't run these without being asked.
+- Server: `kikk@bratwurst:~/KIKK-timetable` (reachable over the tailnet only). Pushing to `main` deploys: a systemd timer (`deploy/kikk-timetable-deploy.{service,timer}`, installed in `/etc/systemd/system/`) runs `deploy/deploy.sh` every minute as `kikk`. It fetches over HTTPS, and when `origin/main` differs from `refs/deployed` it fast-forwards and runs `docker compose up -d --build`. A failed build isn't retried; push a fix or run `vp run server:deploy`, which forces a rebuild. Logs: `journalctl -u kikk-timetable-deploy`. `deploy/install.sh` sets this up (as root); run it again after changing the unit files.
+- `vp run server:backup` downloads `/app/.data` to `backups/` (gitignored, contains user data). Don't run it or `server:deploy` without being asked.
