@@ -1,0 +1,26 @@
+name: Preview link
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  comment:
+    # Only branches of this repository get a preview, see deploy/previews.sh.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment the preview URL
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.head_ref }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: |
+          # Same as slugify() in deploy/previews.sh.
+          slug=$(tr '[:upper:]' '[:lower:]' <<<"$BRANCH" | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-60 | sed -E 's/-+$//')
+          gh pr comment "$PR" --body "Preview: https://$slug.kikk.avecsans.studio
+
+          The server builds it within a few minutes of each push. Previews serve the committed snapshot, have their own favorites and are removed with the branch."

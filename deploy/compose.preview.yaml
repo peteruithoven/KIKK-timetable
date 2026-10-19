@@ -1,0 +1,15 @@
+# A branch preview, started by previews.sh. This file comes from main's checkout, never
+# from the branch, so a branch can't change how its container runs. No env_file: previews
+# serve the committed snapshot and don't send analytics.
+services:
+  app:
+    build: ${PREVIEW_SOURCE:?}
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${PREVIEW_PORT:?}:3000
+    volumes:
+      # Its own favorites, removed with the preview.
+      - data:/app/.data
+
+volumes:
+  data:
