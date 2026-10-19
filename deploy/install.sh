@@ -19,6 +19,12 @@ runuser -u "$user" -- git -C "$repo" remote set-url origin \
   https://github.com/peteruithoven/KIKK-timetable.git
 runuser -u "$user" -- git -C "$repo" fetch --quiet origin main
 
+# Branch previews (previews.sh) write their Caddy config here and reload Caddy.
+caddy_file=/etc/caddy/sites/previews.kikk.avecsans.studio.caddy
+if [ ! -e "$caddy_file" ]; then
+  install -m 644 -o "$user" -g "$user" /dev/null "$caddy_file"
+fi
+
 for unit in "${units[@]}"; do
   install -m 644 "$repo/deploy/$unit" /etc/systemd/system/
 done
