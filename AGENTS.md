@@ -36,6 +36,8 @@ This is a Nuxt 4 app styled with Tailwind CSS v4. Vite+ provides the tooling (ch
 - `vp run postinstall` runs `nuxt prepare`, which regenerates the types in `.nuxt/`. Run it if types for auto-imports or components are missing.
 - `vp check` does not type-check code inside `.vue` files. Use `pnpm --package=vue-tsc@3 --package=typescript@6.0.3 dlx vue-tsc --noEmit -p .nuxt/tsconfig.app.json`. Without the TypeScript pin, dlx pulls TypeScript 7, which vue-tsc can't load.
 - `npx` refuses to run here (pnpm `devEngines`). Use `vp exec <bin>`, e.g. `vp exec tsc -p service-worker/tsconfig.json` for the service worker.
+- CI (`.github/workflows/ci.yml`) runs on pull requests: `vp check`, both type checks above, `vp test` and `vp run build`.
+- pnpm is pinned to 10.30.2 in `devEngines`, matching the Dockerfile and the lockfile. CI downloads that version, locally the global pnpm is used. Moving to pnpm 11+ means regenerating the lockfile (it then records pnpm itself) and allowing or ignoring the esbuild and core-js build scripts in `pnpm-workspace.yaml`, since ignored builds are an error there.
 
 ## Configuration
 
