@@ -6,3 +6,5 @@ export const LIST_ID_PATTERN = /^[a-z]+-[a-z]+-\d{4}$/;
 export function listPath(id: string): string {
   return `/list/${id}`;
 }
+
+export const LIST_LABEL_MAX_LENGTH = 60;

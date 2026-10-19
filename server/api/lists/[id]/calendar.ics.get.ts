@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   const favorites = new Set(list.events);
 
   const calendar = toICalendar(
-    "KIKK 2026 favorites",
+    list.label ? `${list.label} · KIKK 2026` : "KIKK 2026 favorites",
     `Favorites from the KIKK 2026 Timetable: ${origin}/list/${id}`,
     events
       .filter((e) => favorites.has(e.id) && e.startsAt)

@@ -29,6 +29,8 @@ const NOUNS = [
 export interface ListChanges {
   add?: string[];
   remove?: string[];
+  /** An empty string removes the label. */
+  label?: string;
 }
 
 const storage = () => useStorage("data");
@@ -86,8 +88,8 @@ async function reconcile(event: H3Event, list: StoredList): Promise<StoredList> 
   return { ...list, events: [...ids], paths };
 }
 
-function toPublic({ id, events, updatedAt }: StoredList): FavoritesList {
-  return { id, events, updatedAt };
+function toPublic({ id, label, events, updatedAt }: StoredList): FavoritesList {
+  return { id, ...(label ? { label } : {}), events, updatedAt };
 }
 
 export function readList(event: H3Event, id: string): Promise<FavoritesList | null> {
@@ -135,8 +137,10 @@ export async function updateList(
     if (events.size > MAX_EVENTS) {
       throw createError({ statusCode: 422, statusMessage: `At most ${MAX_EVENTS} favorites` });
     }
+    const label = changes.label === undefined ? current?.label : changes.label;
     const list = await reconcile(event, {
       id: listId,
+      ...(label ? { label } : {}),
       events: [...events],
       paths: current?.paths,
       updatedAt: new Date().toISOString(),
@@ -154,8 +158,24 @@ export function parseListId(value: unknown): string {
 }
 
 export function parseChanges(body: unknown): ListChanges {
-  const { add, remove } = (body ?? {}) as Record<string, unknown>;
-  return { add: parseFavoriteIds(add), remove: parseFavoriteIds(remove) };
+  const { add, remove, label } = (body ?? {}) as Record<string, unknown>;
+  return {
+    add: parseFavoriteIds(add),
+    remove: parseFavoriteIds(remove),
+    ...(label === undefined ? {} : { label: parseLabel(label) }),
+  };
+}
+
+function parseLabel(value: unknown): string {
+  // Control characters, like line breaks, would also break the calendar's name.
+  const label = typeof value === "string" ? value.replace(/[\p{Cc}\s]+/gu, " ").trim() : null;
+  if (label === null || label.length > LIST_LABEL_MAX_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Labels are text of at most ${LIST_LABEL_MAX_LENGTH} characters`,
+    });
+  }
+  return label;
 }
 
 function parseFavoriteIds(value: unknown): string[] {

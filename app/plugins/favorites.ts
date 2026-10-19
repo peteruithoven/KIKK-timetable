@@ -1,5 +1,6 @@
 export default defineNuxtPlugin(async () => {
   const listId = useState<string | null>("favorites-id", () => null);
+  const label = useState<string | null>("favorites-label", () => null);
   const events = useState<string[]>("favorites-events", () => []);
   const updatedAt = useState<string | null>("favorites-updated-at", () => null);
 
@@ -10,6 +11,7 @@ export default defineNuxtPlugin(async () => {
       const list = await $fetch<FavoritesList>(`/api/lists/${id}`).catch(() => null);
       if (list) {
         listId.value = list.id;
+        label.value = list.label ?? null;
         events.value = list.events;
         updatedAt.value = list.updatedAt;
       }

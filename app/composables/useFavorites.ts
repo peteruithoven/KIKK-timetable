@@ -4,6 +4,7 @@ const PREVIOUS_KEY = "kikk-previous-lists";
 /** Copy in localStorage, to recover when the cookie is lost and to keep unsaved changes. */
 interface Backup {
   id: string | null;
+  label?: string | null;
   events: string[];
   /** Of the last list received from the server. */
   updatedAt?: string | null;
@@ -34,6 +35,7 @@ function readPrevious(): string[] {
 
 export function useFavorites() {
   const listId = useState<string | null>("favorites-id", () => null);
+  const label = useState<string | null>("favorites-label", () => null);
   const events = useState<string[]>("favorites-events", () => []);
   const updatedAt = useState<string | null>("favorites-updated-at", () => null);
   const favorites = computed(() => new Set(events.value));
@@ -41,6 +43,7 @@ export function useFavorites() {
   function writeBackup() {
     const backup: Backup = {
       id: listId.value,
+      label: label.value,
       events: events.value,
       updatedAt: updatedAt.value,
       pending: { add: [...pending.add], remove: [...pending.remove] },
@@ -61,6 +64,7 @@ export function useFavorites() {
 
   function apply(list: FavoritesList) {
     listId.value = list.id;
+    label.value = list.label ?? null;
     updatedAt.value = list.updatedAt;
     // The server's list, plus changes made while the request was underway.
     events.value = withPending(list.events);
@@ -140,6 +144,18 @@ export function useFavorites() {
     }
   }
 
+  /** Unlike favorites, the label isn't queued: it needs a connection. An empty one removes it. */
+  async function setLabel(value: string) {
+    if (!listId.value) return;
+    apply(
+      await $fetch<FavoritesList>(`/api/lists/${listId.value}`, {
+        method: "PATCH",
+        body: { label: value },
+      }),
+    );
+    writeBackup();
+  }
+
   /** Lists this browser used before, most recent first. Only works in the browser. */
   function previousListIds(): string[] {
     return readPrevious().filter((id) => id !== listId.value);
@@ -158,16 +174,22 @@ export function useFavorites() {
           apply(
             await $fetch<FavoritesList>("/api/lists", {
               method: "POST",
-              body: { id: backup.id ?? undefined, add: backup.events },
+              body: {
+                id: backup.id ?? undefined,
+                label: backup.label ?? undefined,
+                add: backup.events,
+              },
             }),
           );
         } catch {
           listId.value = backup.id;
+          label.value = backup.label ?? null;
           events.value = backup.events;
           updatedAt.value = backup.updatedAt ?? null;
         }
       } else if ((backup.updatedAt ?? "") > (updatedAt.value ?? "")) {
         // The page is older than this device's copy, e.g. when it came from the offline cache.
+        label.value = backup.label ?? null;
         events.value = backup.events;
         updatedAt.value = backup.updatedAt ?? null;
       } else {
@@ -181,10 +203,12 @@ export function useFavorites() {
 
   return {
     listId: readonly(listId),
+    label: readonly(label),
     events: readonly(events),
     isFavorite: (eventId: string) => favorites.value.has(eventId),
     toggle,
     adopt,
+    setLabel,
     previousListIds,
     restore,
     flush,

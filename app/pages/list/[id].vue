@@ -71,17 +71,54 @@ const otherLists = computed(() => {
   const current = favorites.listId.value;
   return [
     ...(current && !isOwn.value
-      ? [{ id: current, count: favorites.events.value.length, inUse: true }]
+      ? [
+          {
+            id: current,
+            label: favorites.label.value,
+            count: favorites.events.value.length,
+            inUse: true,
+          },
+        ]
       : []),
     ...previousLists.value
       .filter((list) => list.id !== id)
       .map((list) => ({
         id: list.id,
+        label: list.label,
         count: list.events.length,
         inUse: false,
       })),
   ];
 });
+
+// Labels are written by people and can be personal: elements showing them are `ph-sensitive`, so
+// PostHog's autocapture leaves out their text. Also keep them out of the page title.
+const label = computed(() => (isOwn.value ? favorites.label.value : list.value?.label));
+const labelInput = useTemplateRef("labelInput");
+const editingLabel = ref(false);
+const labelDraft = ref("");
+const savingLabel = ref(false);
+const labelError = ref(false);
+async function editLabel() {
+  labelDraft.value = label.value ?? "";
+  labelError.value = false;
+  editingLabel.value = true;
+  await nextTick();
+  labelInput.value?.focus();
+}
+async function saveLabel() {
+  savingLabel.value = true;
+  labelError.value = false;
+  try {
+    await favorites.setLabel(labelDraft.value);
+    $posthog?.capture("favorites_list_labeled", { has_label: !!favorites.label.value });
+    editingLabel.value = false;
+  } catch {
+    labelError.value = true;
+  } finally {
+    savingLabel.value = false;
+  }
+}
 
 const switchDialog = useTemplateRef("switchDialog");
 const adopting = ref(false);
@@ -120,9 +157,60 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
       <p class="font-display text-[11px] font-semibold tracking-[0.3em] text-neutral-500 uppercase">
         Favorites
       </p>
-      <h1 class="mt-1 font-display text-3xl font-extrabold tracking-tight break-all sm:text-5xl">
-        {{ id }}
-      </h1>
+      <form
+        v-if="editingLabel"
+        class="mt-2 flex flex-wrap gap-2"
+        @submit.prevent="saveLabel"
+        @keydown.esc="editingLabel = false"
+      >
+        <input
+          ref="labelInput"
+          v-model="labelDraft"
+          :maxlength="LIST_LABEL_MAX_LENGTH"
+          aria-label="Label"
+          placeholder="Add a label"
+          class="min-w-0 flex-1 basis-60 border border-ink px-3 py-2 font-display text-xl font-bold"
+        />
+        <div class="flex gap-2">
+          <button
+            type="submit"
+            :disabled="savingLabel"
+            class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700 disabled:opacity-60"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            class="bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+            @click="editingLabel = false"
+          >
+            Cancel
+          </button>
+        </div>
+        <p v-if="labelError" role="alert" class="basis-full text-sm text-neutral-700">
+          The label couldn't be saved. Check your connection and try again.
+        </p>
+      </form>
+      <template v-else>
+        <div class="mt-1 flex items-start gap-3">
+          <h1
+            class="ph-sensitive min-w-0 font-display text-3xl font-extrabold tracking-tight sm:text-5xl"
+            :class="label ? 'wrap-break-word' : 'break-all'"
+          >
+            {{ label || id }}
+          </h1>
+          <button
+            v-if="isOwn"
+            type="button"
+            :aria-label="label ? 'Edit label' : 'Add label'"
+            class="mt-0.5 shrink-0 border border-transparent p-1.5 transition-colors hover:border-line sm:mt-2.5 bevel-corner"
+            @click="editLabel"
+          >
+            <Icon name="material-symbols:edit-outline" class="block size-5" aria-hidden="true" />
+          </button>
+        </div>
+        <p v-if="label" class="mt-1 text-sm text-neutral-500">{{ id }}</p>
+      </template>
 
       <!-- Collapsed, so returning visitors see their favorites right away. -->
       <details v-if="isOwn" :open="isEmpty" class="group mt-6 border-y border-line">
@@ -285,9 +373,17 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           >
             <NuxtLink
               :to="listPath(other.id)"
-              class="flex items-baseline justify-between gap-4 py-3 transition-colors hover:bg-block"
+              class="flex items-center justify-between gap-4 py-3 transition-colors hover:bg-block"
             >
-              <span class="min-w-0 font-display font-semibold break-all">{{ other.id }}</span>
+              <span v-if="other.label" class="ph-sensitive min-w-0">
+                <span class="block font-display font-semibold wrap-break-word">
+                  {{ other.label }}
+                </span>
+                <span class="block text-xs break-all text-neutral-500">{{ other.id }}</span>
+              </span>
+              <span v-else class="min-w-0 font-display font-semibold break-all">{{
+                other.id
+              }}</span>
               <span class="shrink-0 text-xs text-neutral-500">
                 <template v-if="other.inUse">In use · </template>
                 {{ other.count }} {{ other.count === 1 ? "favorite" : "favorites" }}
