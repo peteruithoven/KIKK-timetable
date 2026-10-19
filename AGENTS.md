@@ -121,6 +121,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 
 ## Deployment
 
+- Never change anything on a server without asking first, every time, even when it seems part of the task. That covers commands that write or restart anything (git, Docker, systemd, Caddy, files), running `deploy/*.sh` or the `server:*` scripts, and pushing or merging to `main`, which deploys. Read-only inspection is fine, but don't read secrets such as `.env`, and say what you ran.
 - Docker Compose on a VPS behind an HTTPS reverse proxy that must send `X-Forwarded-Proto` and `X-Forwarded-Host` (secure cookie, absolute links). The `data` volume (`/app/.data`) holds favorites and the schedule and art trail caches; back it up.
 - Server: `kikk@brezel:~/KIKK-timetable` (reachable over the tailnet only). Pushing to `main` deploys: a systemd timer (`deploy/kikk-timetable-deploy.{service,timer}`, installed in `/etc/systemd/system/`) runs `deploy/deploy.sh` every minute as `kikk`. It fetches over HTTPS, and when `origin/main` differs from `refs/deployed` it fast-forwards and runs `docker compose up -d --build`. A failed build isn't retried; push a fix or run `vp run server:deploy`, which forces a rebuild. Logs: `journalctl -u kikk-timetable-deploy`. `deploy/install.sh` sets this up (as root); run it again after changing the unit files.
 - `vp run server:backup` downloads `/app/.data` to `backups/` (gitignored, contains user data). Don't run it or `server:deploy` without being asked.
