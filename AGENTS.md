@@ -74,6 +74,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - Two sources, fetched by `fetchTrailData()`: Kikk's `installations` table (texts in both languages, images, links; its `location` is mostly the artist's country) and the Supabase project of Kikk's art trail app exhibitions.kikkfestival.be (`NUXT_TRAIL_SUPABASE_URL` / `_KEY`, public anon key from that app's bundle): `entries`, `locations` and `artists`, for the place, year, materials, portrait and properly cased artist names. Rows are matched on title, loosely, as titles differ ("LADDER", "L'échelle - Ladder"); see `findByName()` in `kikk-mapping.ts`.
 - `kikk-cache.ts` caches it separately from the schedule (`kikk:trail`, fallback `server/assets/trail-snapshot.json`, also written by `vp run snapshot`), so a broken trail source never blocks schedule updates.
 - The overview groups works by place, north to south.
+- On a work's page, swiping left or right (`useSwipeNavigation`) goes to the next or previous work in the overview's order, with `router.replace` so Back returns to the overview. Swipes from the screen edges, on horizontal scrollers (the gallery) or on a zoomed page are ignored. The page sets `overscroll-x-none` on `<html>` so Chrome doesn't also go back.
 
 ## Favorites
 

@@ -40,6 +40,34 @@ const links = computed(() =>
   ].filter((link): link is { label: string; url: string } => Boolean(link.url)),
 );
 
+// Swiping goes to the next or previous work, in the order of the art trail page. It replaces the
+// history entry, so Back still returns to the art trail, like closing an article in a news app.
+const order = computed(() =>
+  groupByVenue(trail.value?.installations ?? []).flatMap((group) => group.items),
+);
+// The direction of the swipe that led here, for the page to slide in from that side.
+const swiped = useState<"previous" | "next" | null>("trail-swiped", () => null);
+const slideIn =
+  swiped.value === "next"
+    ? "animate-slide-in-left"
+    : swiped.value === "previous"
+      ? "animate-slide-in-right"
+      : undefined;
+onMounted(() => (swiped.value = null));
+const { $posthog } = useNuxtApp();
+useSwipeNavigation((direction) => {
+  const index = order.value.findIndex((item) => item.id === installation.value?.id);
+  if (index === -1) return;
+  const target = order.value[direction === "next" ? index + 1 : index - 1];
+  if (!target) return;
+  swiped.value = direction;
+  $posthog?.capture("installation_swiped", { direction });
+  router.replace(installationPath(target));
+});
+// Chrome on touchscreens would go back on the same swipe that goes to the previous work. The
+// system's edge swipes (iOS, Android) still work.
+useHead({ htmlAttrs: { class: "overscroll-x-none" } });
+
 // Back to the art trail as it was when we came from there.
 function goBack(clickEvent: MouseEvent) {
   if (window.history.state?.back) {
@@ -76,10 +104,11 @@ useSeoMeta({
       :src="resizedImage(installation.heroImage, 1600, 900)"
       crossorigin="anonymous"
       alt=""
+      :class="slideIn"
       class="aspect-video max-h-[70vh] w-full bg-ink object-cover"
     />
 
-    <article class="mx-auto max-w-5xl px-4 pt-6 pb-16">
+    <article :class="slideIn" class="mx-auto max-w-5xl px-4 pt-6 pb-16">
       <div class="flex flex-wrap gap-2">
         <span
           class="clip-corner bg-ink px-2.5 py-1 font-display text-[11px] font-bold tracking-[0.12em] text-paper uppercase"

@@ -11,6 +11,29 @@
   --color-line-faint: #f0f0f0;
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter Tight Variable", "Helvetica Neue", ui-sans-serif, sans-serif;
+
+  /* A page swiped to, coming in from the side the finger moved away from. */
+  --animate-slide-in-left: slide-in-left 200ms ease-out;
+  --animate-slide-in-right: slide-in-right 200ms ease-out;
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(3rem);
+    }
+  }
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(-3rem);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in-left,
+  .animate-slide-in-right {
+    animation: none;
+  }
 }
 
 /* Tailwind v4 gives buttons the default cursor. */
