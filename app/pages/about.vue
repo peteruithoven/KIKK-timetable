@@ -12,7 +12,7 @@ const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true })
 </script>
 
 <template>
-  <div class="min-h-dvh">
+  <div class="min-h-dvh text-red-600 **:text-red-600">
     <nav
       class="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-line bg-paper px-4 py-3"
     >
