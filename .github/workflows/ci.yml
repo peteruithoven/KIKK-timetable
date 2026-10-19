@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs Vite+, Node.js and pnpm, then runs `vp install` (whose postinstall
+      # runs `nuxt prepare`, generating the `.nuxt` types the checks below need).
+      - uses: voidzero-dev/setup-vp@v1.21.2
+        with:
+          node-version: "24"
+          cache: true
+
+      - name: Format, lint and type check
+        run: vp check
+
+      # `vp check` doesn't type check `.vue` files. The TypeScript pin keeps dlx from
+      # pulling TypeScript 7, which vue-tsc can't load.
+      - name: Type check Vue files
+        run: pnpm --package=vue-tsc@3 --package=typescript@6.0.3 dlx vue-tsc --noEmit -p .nuxt/tsconfig.app.json
+
+      - name: Type check service worker
+        run: vp exec tsc -p service-worker/tsconfig.json
+
+      - name: Test
+        run: vp test
+
+      # `vp build` starts plain Vite, the app is built by Nuxt.
+      - name: Build
+        run: vp run build
