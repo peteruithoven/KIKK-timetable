@@ -96,8 +96,6 @@ const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true })
           </div>
         </div>
       </section>
-
-      <p class="mt-10 text-neutral-700">test</p>
     </main>
   </div>
 </template>
