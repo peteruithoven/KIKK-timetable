@@ -77,6 +77,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 
 - No accounts. Lists live in Nitro storage as `favorites:<id>` (ids like `brave-otter-4821`), via `/api/lists`. The id is the share link (`/list/<id>`) and gives edit access.
 - The server sets the `kikk-list` cookie (server-set cookies survive Safari's 7 day cleanup). `app/plugins/favorites.ts` loads the list during SSR. `useFavorites` updates optimistically, queues unsaved changes and keeps a localStorage backup that can recreate the list.
+- Switching to a shared list ("Switch to this list on this device", `adopt()`) asks for confirmation when the device has favorites, and remembers the old id in localStorage (`kikk-previous-lists`). Nothing else knows it. List pages show the non-empty ones under "Your lists", plus the one in use when viewing another list.
 - A list's `events` holds both event and installation ids (`installation:uuid`); the name predates installations.
 - Stored lists keep a `paths` map (event id to `kind/slug`, installation id to `trail/slug`) so favorites follow events Kikk re-creates under a new id. It's internal, the API doesn't return it.
 - `/api/lists/<id>/calendar.ics` is a subscribable calendar (`server/utils/ical.ts`).

@@ -47,13 +47,51 @@ const calendarUrl = `${origin}/api/lists/${id}/calendar.ics`;
 const webcalUrl = calendarUrl.replace(/^https?:/, "webcal:");
 const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`;
 
+// Only this browser knows them, so they're loaded after hydration. Empty ones aren't worth
+// switching back to.
+const previousLists = ref<FavoritesList[]>([]);
+onMounted(() =>
+  watch(
+    favorites.listId,
+    async () => {
+      const lists = await Promise.all(
+        favorites
+          .previousListIds()
+          .map((other) => $fetch<FavoritesList>(`/api/lists/${other}`).catch(() => null)),
+      );
+      previousLists.value = lists.filter((other): other is FavoritesList => !!other?.events.length);
+    },
+    { immediate: true },
+  ),
+);
+// The lists to switch between, besides this one. Includes the one in use when viewing another.
+// Only when this device used several, otherwise "Back to your list" covers it.
+const otherLists = computed(() => {
+  if (!previousLists.value.length) return [];
+  const current = favorites.listId.value;
+  return [
+    ...(current && !isOwn.value
+      ? [{ id: current, count: favorites.events.value.length, inUse: true }]
+      : []),
+    ...previousLists.value
+      .filter((list) => list.id !== id)
+      .map((list) => ({
+        id: list.id,
+        count: list.events.length,
+        inUse: false,
+      })),
+  ];
+});
+
+const switchDialog = useTemplateRef("switchDialog");
 const adopting = ref(false);
 async function adopt() {
   adopting.value = true;
   try {
     await favorites.adopt(id);
     $posthog?.capture("favorites_list_adopted");
-    await navigateTo("/");
+    // The page then shows this list as this device's own.
+    switchDialog.value?.close();
   } finally {
     adopting.value = false;
   }
@@ -121,23 +159,65 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
 
       <section v-else class="mt-6 border-y border-line py-5">
         <p class="max-w-prose text-sm text-neutral-700">
-          Someone shared these favorites with you. Use this list on this device to see them in the
-          timetable and change them together.
+          Someone shared the following favorites with you.
         </p>
-        <button
-          type="button"
-          :disabled="adopting"
-          class="mt-4 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700 disabled:opacity-60"
-          @click="adopt"
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            :disabled="adopting"
+            class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700 disabled:opacity-60"
+            @click="favorites.events.value.length ? switchDialog?.showModal() : adopt()"
+          >
+            Switch to this list on this device
+          </button>
+          <NuxtLink
+            v-if="favorites.listId.value"
+            :to="listPath(favorites.listId.value)"
+            class="bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+          >
+            Back to your list
+          </NuxtLink>
+        </div>
+
+        <!-- Only when there's something to lose: this device's own favorites. -->
+        <dialog
+          ref="switchDialog"
+          aria-labelledby="switch-dialog-title"
+          class="m-auto w-[calc(100%-2rem)] max-w-md border border-ink bg-paper p-6 text-ink backdrop:bg-ink/60"
         >
-          Use this list on this device
-        </button>
-        <p v-if="favorites.listId.value" class="mt-3 text-xs text-neutral-500">
-          Your current list ({{ favorites.events.value.length }} favorites) stays available at
-          <NuxtLink :to="listPath(favorites.listId.value)" class="underline">
-            {{ listPath(favorites.listId.value) }}</NuxtLink
-          >.
-        </p>
+          <h2 id="switch-dialog-title" class="font-display text-lg font-bold">
+            Switch to this list?
+          </h2>
+          <p class="mt-2 text-sm text-neutral-700">
+            Your timetable will show these favorites, and your changes show up for everyone who uses
+            this list.
+            <template v-if="favorites.listId.value">
+              Your current list ({{ favorites.events.value.length }}
+              {{ favorites.events.value.length === 1 ? "favorite" : "favorites" }}) stays available
+              at
+              <NuxtLink :to="listPath(favorites.listId.value)" class="underline">
+                {{ listPath(favorites.listId.value) }}</NuxtLink
+              >.
+            </template>
+          </p>
+          <div class="mt-5 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              class="bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+              @click="switchDialog?.close()"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              :disabled="adopting"
+              class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700 disabled:opacity-60"
+              @click="adopt"
+            >
+              Switch
+            </button>
+          </div>
+        </dialog>
       </section>
 
       <details class="group border-b border-line">
@@ -184,6 +264,37 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             tracking-event="calendar_link_copied"
           />
         </div>
+      </details>
+
+      <details v-if="otherLists.length" class="group border-b border-line">
+        <summary
+          class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
+        >
+          Your lists
+          <Icon
+            name="material-symbols:expand-more"
+            class="size-6 shrink-0 transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <ul class="border-t border-line">
+          <li
+            v-for="other in otherLists"
+            :key="other.id"
+            class="border-b border-line last:border-b-0"
+          >
+            <NuxtLink
+              :to="listPath(other.id)"
+              class="flex items-baseline justify-between gap-4 py-3 transition-colors hover:bg-block"
+            >
+              <span class="min-w-0 font-display font-semibold break-all">{{ other.id }}</span>
+              <span class="shrink-0 text-xs text-neutral-500">
+                <template v-if="other.inUse">In use · </template>
+                {{ other.count }} {{ other.count === 1 ? "favorite" : "favorites" }}
+              </span>
+            </NuxtLink>
+          </li>
+        </ul>
       </details>
 
       <p v-if="isEmpty" class="mt-8 text-neutral-500">

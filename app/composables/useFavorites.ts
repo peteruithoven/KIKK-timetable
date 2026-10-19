@@ -1,4 +1,5 @@
 const BACKUP_KEY = "kikk-favorites";
+const PREVIOUS_KEY = "kikk-previous-lists";
 
 /** Copy in localStorage, to recover when the cookie is lost and to keep unsaved changes. */
 interface Backup {
@@ -18,6 +19,16 @@ function readBackup(): Backup | null {
     return JSON.parse(localStorage.getItem(BACKUP_KEY) ?? "null");
   } catch {
     return null;
+  }
+}
+
+/** Lists this browser used before switching to another one, most recent first. */
+function readPrevious(): string[] {
+  try {
+    const ids: unknown = JSON.parse(localStorage.getItem(PREVIOUS_KEY) ?? "[]");
+    return Array.isArray(ids) ? ids.filter((id) => typeof id === "string") : [];
+  } catch {
+    return [];
   }
 }
 
@@ -113,10 +124,25 @@ export function useFavorites() {
 
   /** Switches this device to another list, e.g. one opened through a shared link. */
   async function adopt(id: string) {
+    const previous = listId.value;
+    await flush();
     pending.add.clear();
     pending.remove.clear();
     apply(await $fetch<FavoritesList>("/api/lists", { method: "POST", body: { id } }));
     writeBackup();
+    // Only this browser knows the id of the list it leaves, so remember it.
+    const ids = readPrevious().filter((other) => other !== previous && other !== id);
+    if (previous && previous !== id) ids.unshift(previous);
+    try {
+      localStorage.setItem(PREVIOUS_KEY, JSON.stringify(ids.slice(0, 10)));
+    } catch {
+      // Storage can be unavailable, e.g. in private browsing.
+    }
+  }
+
+  /** Lists this browser used before, most recent first. Only works in the browser. */
+  function previousListIds(): string[] {
+    return readPrevious().filter((id) => id !== listId.value);
   }
 
   /** Runs once in the browser after hydration. */
@@ -159,6 +185,7 @@ export function useFavorites() {
     isFavorite: (eventId: string) => favorites.value.has(eventId),
     toggle,
     adopt,
+    previousListIds,
     restore,
     flush,
   };
