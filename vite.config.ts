@@ -13,4 +13,8 @@ export default defineConfig({
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
     options: { typeAware: true, typeCheck: true },
   },
+  test: {
+    // There are no tests yet, `vp test` would fail in CI.
+    passWithNoTests: true,
+  },
 });
