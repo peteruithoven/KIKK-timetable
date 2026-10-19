@@ -114,6 +114,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - `$fetch` to typed routes with template strings can hit "excessive stack depth"; pass the type, e.g. `$fetch<FavoritesList>(…)`.
 - The formatter rewrites unicode escapes of invisible characters (like the non-breaking space) into the literal character, also in Markdown. In regexes use `\p{Zs}` with the `u` flag.
 - The user usually runs the dev server on port 3000. Editing `nuxt.config.ts` restarts it. `vp run build` writes the `.nuxt` folder it uses, so test production builds with Docker instead: `docker build -t kikk-timetable:test .` and `docker run --env-file .env -p 3125:3000 kikk-timetable:test`.
+- Claude Code cloud sessions (claude.ai/code, the Claude app) install dependencies with a SessionStart hook (`.claude/settings.json` runs `scripts/cloud-setup.sh`, which does nothing locally). They use the project's own `vp` from `node_modules/.bin`, have no Supabase credentials (the server serves the committed snapshots) and can't reach Supabase or OpenFreeMap.
 - Browser testing: Chrome is at `/usr/bin/google-chrome`; drive it with `puppeteer-core` installed outside the project. PostHog treats a browser with `navigator.webdriver` set as a bot and sends nothing; launch Chrome with `--disable-blink-features=AutomationControlled` to test analytics.
 
 ## Deployment
