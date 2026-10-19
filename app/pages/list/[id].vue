@@ -326,6 +326,10 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             Art trail works aren't included, they have no set times.
           </template>
         </p>
+        <p class="mt-2 max-w-prose text-sm text-neutral-700">
+          Or add them once with a calendar file. New favorites and schedule changes won't show up
+          then.
+        </p>
         <div class="mt-4 flex flex-wrap gap-2 pb-5">
           <a
             :href="googleCalendarUrl"
@@ -336,6 +340,16 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           >
             Google Calendar
             <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
+          </a>
+          <!-- No download attribute: iOS then shows its "Add All" sheet, Android and desktop
+               browsers download it anyway, as they can't display it. -->
+          <a
+            :href="calendarUrl"
+            class="inline-flex items-center gap-2 bevel-corner border border-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors hover:bg-ink hover:text-paper"
+            @click="$posthog?.capture('calendar_file_downloaded')"
+          >
+            <Icon name="material-symbols:download" class="size-4" aria-hidden="true" />
+            Calendar file
           </a>
           <CopyButton
             :value="calendarUrl"
