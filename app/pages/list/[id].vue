@@ -37,6 +37,7 @@ const days = computed(() => {
 const installations = computed(
   () => trail.value?.installations.filter((item) => favoriteIds.value.has(item.id)) ?? [],
 );
+const isEmpty = computed(() => days.value.length === 0 && installations.value.length === 0);
 
 // Behind the reverse proxy the app itself is reached over plain http.
 const origin = useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin;
@@ -85,12 +86,23 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         {{ id }}
       </h1>
 
-      <section v-if="isOwn" class="mt-6 border-y border-line py-5">
+      <!-- Collapsed, so returning visitors see their favorites right away. -->
+      <details v-if="isOwn" :open="isEmpty" class="group mt-6 border-y border-line">
+        <summary
+          class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
+        >
+          Share your list
+          <Icon
+            name="material-symbols:expand-more"
+            class="size-6 shrink-0 transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
         <p class="max-w-prose text-sm text-neutral-700">
           This is your list. Open this link on another device to see and change the same favorites,
           or share it with friends to plan together. Anyone with the link can change the list.
         </p>
-        <div class="mt-4 flex flex-wrap gap-2">
+        <div class="mt-4 flex flex-wrap gap-2 pb-5">
           <input
             :value="shareUrl"
             readonly
@@ -105,7 +117,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           />
           <CopyButton :value="shareUrl" tracking-event="favorites_link_copied" />
         </div>
-      </section>
+      </details>
 
       <section v-else class="mt-6 border-y border-line py-5">
         <p class="max-w-prose text-sm text-neutral-700">
@@ -128,9 +140,18 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </p>
       </section>
 
-      <section class="border-b border-line py-5">
-        <h2 class="font-display text-lg font-bold">Add to your calendar</h2>
-        <p class="mt-1 max-w-prose text-sm text-neutral-700">
+      <details class="group border-b border-line">
+        <summary
+          class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
+        >
+          Add to your calendar
+          <Icon
+            name="material-symbols:expand-more"
+            class="size-6 shrink-0 transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <p class="max-w-prose text-sm text-neutral-700">
           Subscribe to {{ isOwn ? "your" : "these" }} favorites in your calendar app. It stays up to
           date: new favorites and schedule changes show up by themselves. Calendar apps check for
           changes every few hours, Google Calendar can take up to a day.
@@ -138,7 +159,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             Art trail works aren't included, they have no set times.
           </template>
         </p>
-        <div class="mt-4 flex flex-wrap gap-2">
+        <div class="mt-4 flex flex-wrap gap-2 pb-5">
           <a
             :href="webcalUrl"
             class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
@@ -163,9 +184,9 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             tracking-event="calendar_link_copied"
           />
         </div>
-      </section>
+      </details>
 
-      <p v-if="days.length === 0 && installations.length === 0" class="mt-8 text-neutral-500">
+      <p v-if="isEmpty" class="mt-8 text-neutral-500">
         No favorites yet. Open an event in the timetable or a work on the art trail and add it to
         your favorites.
       </p>
