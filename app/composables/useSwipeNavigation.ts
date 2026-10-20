@@ -7,9 +7,14 @@ const SLOP = 10;
 /**
  * Calls `onSwipe` when a finger swipes horizontally across the page: "next" for right to left,
  * "previous" for left to right, like turning pages. Vertical scrolling, pinching, swipes on
- * horizontally scrolling content (a gallery) and swipes on a zoomed in page are left alone.
+ * horizontally scrolling content (a gallery or a zoomed in photo) and on a zoomed in page are
+ * left alone. Swipes in an open dialog (the photo viewer) only count for the dialog itself, as
+ * `target`.
  */
-export function useSwipeNavigation(onSwipe: (direction: "previous" | "next") => void) {
+export function useSwipeNavigation(
+  onSwipe: (direction: "previous" | "next") => void,
+  target?: Readonly<Ref<HTMLElement | null>>,
+) {
   let start: { x: number; y: number } | null = null;
   let horizontal = false;
 
@@ -20,7 +25,8 @@ export function useSwipeNavigation(onSwipe: (direction: "previous" | "next") => 
       touch.clientX > EDGE &&
       touch.clientX < window.innerWidth - EDGE &&
       (window.visualViewport?.scale ?? 1) <= 1.01 &&
-      !inHorizontalScroller(event.target)
+      !inHorizontalScroller(event.target) &&
+      (target || !(event.target instanceof Element && event.target.closest("dialog[open]")))
         ? { x: touch.clientX, y: touch.clientY }
         : null;
     horizontal = false;
@@ -58,18 +64,20 @@ export function useSwipeNavigation(onSwipe: (direction: "previous" | "next") => 
     start = null;
   }
 
+  let element: HTMLElement | Window | null = null;
   onMounted(() => {
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-    window.addEventListener("touchcancel", onTouchCancel, { passive: true });
+    element = target ? target.value : window;
+    element?.addEventListener("touchstart", onTouchStart as EventListener, { passive: true });
+    element?.addEventListener("touchmove", onTouchMove as EventListener, { passive: true });
+    element?.addEventListener("touchend", onTouchEnd as EventListener, { passive: true });
+    element?.addEventListener("touchcancel", onTouchCancel, { passive: true });
   });
 
   onBeforeUnmount(() => {
-    window.removeEventListener("touchstart", onTouchStart);
-    window.removeEventListener("touchmove", onTouchMove);
-    window.removeEventListener("touchend", onTouchEnd);
-    window.removeEventListener("touchcancel", onTouchCancel);
+    element?.removeEventListener("touchstart", onTouchStart as EventListener);
+    element?.removeEventListener("touchmove", onTouchMove as EventListener);
+    element?.removeEventListener("touchend", onTouchEnd as EventListener);
+    element?.removeEventListener("touchcancel", onTouchCancel);
   });
 }
 
