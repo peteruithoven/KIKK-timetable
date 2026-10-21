@@ -53,6 +53,7 @@ const UNKNOWN_VENUE = "To be announced";
 const VENUE_ORDER = [
   "Théâtre de Namur — Grande Salle",
   "Théâtre de Namur — Le Studio",
+  "Théâtre de Namur — Le Foyer",
   "La Bourse — Auditoire Rops",
   "La Bourse — Auditoire Michaux",
   "La Bourse — Plein Ciel",

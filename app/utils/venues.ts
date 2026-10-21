@@ -76,11 +76,36 @@ export const VENUES: Venue[] = [
   },
 ];
 
+/**
+ * Walking minutes between the places with timed events, by venue key pair in alphabetical order.
+ * From OpenStreetMap's foot router (routing.openstreetmap.de/routed-foot, its `table` service),
+ * rounded up. Both directions take the same time.
+ */
+const WALKING_MINUTES: Record<string, number> = {
+  "bourse|delta": 3,
+  "bourse|nef": 5,
+  "bourse|saint-loup": 6,
+  "bourse|theatre": 2,
+  "delta|nef": 4,
+  "delta|saint-loup": 7,
+  "delta|theatre": 3,
+  "nef|saint-loup": 9,
+  "nef|theatre": 5,
+  "saint-loup|theatre": 6,
+};
+
 /** The place of an event venue, e.g. `"La Bourse — Auditoire Rops"` → La Bourse. */
 export function findVenue(venue: string | null): Venue | undefined {
   if (!venue) return undefined;
   const { building, room } = venueParts(venue);
   return VENUES.find((place) => place.name === (building ?? room));
+}
+
+/** Minutes to walk from one event venue to another, null within a place or when unknown. */
+export function walkingMinutes(from: string | null, to: string | null): number | null {
+  const keys = [findVenue(from)?.key, findVenue(to)?.key];
+  if (!keys[0] || !keys[1] || keys[0] === keys[1]) return null;
+  return WALKING_MINUTES[keys.sort().join("|")] ?? null;
 }
 
 /** `"La Bourse — Auditoire Rops"` → `"/map?venue=bourse"`, null for places not on the map. */

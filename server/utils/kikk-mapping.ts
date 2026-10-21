@@ -22,6 +22,8 @@ const TRACKS: Record<string, string> = {
 
 const VENUE_ALIASES: Record<string, string> = {
   Delta: "Le Delta",
+  // Other rooms are written building first, with an em dash.
+  "Le Foyer - Théâtre de Namur": "Théâtre de Namur — Le Foyer",
   // Names in the art trail app.
   "Galerie de Namur": "Galerie du Beffroi",
   "L'Église Saint-Loup": "Église Saint-Loup",

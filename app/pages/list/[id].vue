@@ -36,6 +36,7 @@ const days = computed(() => {
           event,
           // Time since the previous favorite ended, negative when they overlap.
           gap: index ? minutesBetween(events[index - 1]!, event) : null,
+          walk: index ? walkingMinutes(events[index - 1]!.venue, event.venue) : null,
         })),
       };
     });
@@ -415,18 +416,20 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </h2>
         <ul class="mt-2 border-t border-ink">
           <li
-            v-for="{ event, gap } in day.events"
+            v-for="{ event, gap, walk } in day.events"
             :key="event.id"
             class="relative border-b border-line"
           >
-            <!-- On the line above, below the previous favorite's end time. -->
+            <!-- On the line above, below the previous favorite's end time. Red when there's no
+                 time to get there. -->
             <span
               v-if="gap !== null"
               class="absolute -top-2 left-0 bg-paper pr-1.5 text-[11px] leading-4 tabular-nums"
-              :class="gap < 0 ? 'text-red-700/70' : 'text-neutral-400'"
+              :class="gap < (walk ?? 0) ? 'text-red-700/70' : 'text-neutral-400'"
             >
               <span class="sr-only">{{ gap < 0 ? "Overlaps by" : "Break of" }} </span>
               {{ gap < 0 ? `−${formatDuration(-gap)}` : gap ? formatDuration(gap) : "No break" }}
+              <template v-if="walk"> · {{ walk }} min walk</template>
             </span>
             <NuxtLink
               :to="eventPath(event)"
