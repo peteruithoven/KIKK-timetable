@@ -1,6 +1,24 @@
 <script setup lang="ts">
 const { data, error } = await useTrail();
-const groups = computed(() => groupByVenue(data.value?.installations ?? []));
+
+const search = useSearchQuery("trail_searched", () => matches.value.length);
+const searchOpen = ref(search.value !== "");
+const searchText = useSearchText(search);
+const matches = computed(
+  () =>
+    data.value?.installations.filter((item) =>
+      matchesSearch(
+        search.value,
+        item.title,
+        item.artist,
+        item.venue,
+        item.medium,
+        searchText.value[item.id] ?? null,
+      ),
+    ) ?? [],
+);
+// Places without matching works are left out.
+const groups = computed(() => groupByVenue(matches.value));
 
 useSeoMeta({
   title: "Art Trail · KIKK 2026",
@@ -13,18 +31,30 @@ useSeoMeta({
     <nav
       class="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-line bg-paper px-4 py-3"
     >
+      <!-- Icons only on phones while searching, to make room. -->
       <NuxtLink
         to="/"
-        class="inline-flex items-center gap-2 bevel-corner border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+        class="inline-flex shrink-0 items-center gap-2 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+        :class="{ 'max-sm:px-2': searchOpen }"
       >
-        <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Timetable
+        <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" />
+        <span :class="{ 'max-sm:sr-only': searchOpen }">Timetable</span>
       </NuxtLink>
-      <NuxtLink
-        to="/map"
-        class="inline-flex items-center gap-2 bevel-corner border border-line px-3 py-1.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
-      >
-        <Icon name="material-symbols:map-outline" class="size-4" aria-hidden="true" /> Map
-      </NuxtLink>
+      <div class="flex min-w-0 flex-1 justify-end gap-2">
+        <SearchToggle
+          v-model="search"
+          v-model:open="searchOpen"
+          placeholder="Title, artist, place"
+        />
+        <NuxtLink
+          to="/map"
+          class="inline-flex shrink-0 items-center gap-2 bevel-corner border border-line px-3 py-2 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors hover:border-ink"
+          :class="{ 'max-sm:px-2': searchOpen }"
+        >
+          <Icon name="material-symbols:map-outline" class="size-4" aria-hidden="true" />
+          <span :class="{ 'max-sm:sr-only': searchOpen }">Map</span>
+        </NuxtLink>
+      </div>
     </nav>
 
     <main class="mx-auto max-w-5xl px-4 pt-6 pb-16">
@@ -43,6 +73,9 @@ useSeoMeta({
 
       <p v-if="error && !data" class="mt-8 text-neutral-500">
         The art trail couldn't be loaded. Please try again later.
+      </p>
+      <p v-else-if="data && groups.length === 0" class="mt-8 text-neutral-500">
+        Nothing matching “{{ search.trim() }}”.
       </p>
       <!-- Anchors for the map's links, clear of the sticky nav. -->
       <section

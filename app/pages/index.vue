@@ -29,44 +29,9 @@ const selectedVenue = computed<string>({
   },
 });
 
-// Search, kept in the URL (`?q=`) so it's still there when coming back from an event page.
-// Typed into a ref: an input bound to the route would lag behind the navigation.
-const search = ref(typeof route.query.q === "string" ? route.query.q : "");
+const search = useSearchQuery("timetable_searched", () => matches.value.length);
 const searchOpen = ref(search.value !== "");
-const searchInput = useTemplateRef<HTMLInputElement>("searchInput");
-const searchButton = useTemplateRef<HTMLButtonElement>("searchButton");
-watch(search, (q) => {
-  const { q: _, ...query } = route.query;
-  router.replace({ query: q ? { ...query, q } : query });
-});
-
-async function openSearch() {
-  searchOpen.value = true;
-  await nextTick();
-  searchInput.value?.focus();
-}
-
-async function closeSearch() {
-  search.value = "";
-  searchOpen.value = false;
-  await nextTick();
-  searchButton.value?.focus();
-}
-
-// Once someone stops typing.
-const { $posthog } = useNuxtApp();
-let searchTimer: ReturnType<typeof setTimeout> | undefined;
-watch(search, (q) => {
-  clearTimeout(searchTimer);
-  if (!q.trim()) return;
-  searchTimer = setTimeout(() => {
-    $posthog?.capture("timetable_searched", {
-      search_query: q.trim(),
-      results: matches.value.length,
-    });
-  }, 1500);
-});
-onBeforeUnmount(() => clearTimeout(searchTimer));
+const searchText = useSearchText(search);
 
 // Events at the selected venue that match the search, on any day.
 const matches = computed(
@@ -74,7 +39,14 @@ const matches = computed(
     data.value?.events.filter(
       (event) =>
         (selectedVenue.value === "all" || findVenue(event.venue)?.key === selectedVenue.value) &&
-        matchesSearch(event, search.value),
+        matchesSearch(
+          search.value,
+          event.title,
+          event.speakers,
+          event.venue,
+          event.keywords,
+          searchText.value[event.id] ?? null,
+        ),
     ) ?? [],
 );
 
@@ -222,46 +194,11 @@ useHead({
         <div class="flex min-w-0 flex-1 justify-end gap-2">
           <!-- On phones it takes the place of the venue select, which keeps filtering, and the days
           get narrower. -->
-          <div v-if="searchOpen" role="search" class="relative min-w-0 flex-1 sm:max-w-72">
-            <label>
-              <span class="sr-only">Search</span>
-              <Icon
-                name="material-symbols:search"
-                class="pointer-events-none absolute top-1/2 left-2 size-5 -translate-y-1/2"
-                aria-hidden="true"
-              />
-              <!-- 16px text, or iOS zooms in on focus. -->
-              <input
-                ref="searchInput"
-                v-model="search"
-                type="search"
-                enterkeyhint="search"
-                placeholder="Title, speaker, tag"
-                class="w-full bevel-corner appearance-none border border-ink bg-paper py-1 pr-9 pl-8 text-base leading-6 outline-none placeholder:text-neutral-500 [&::-webkit-search-cancel-button]:hidden"
-                @keydown.esc="closeSearch"
-                @keydown.enter="searchInput?.blur()"
-                @blur="search.trim() || (searchOpen = false)"
-              />
-            </label>
-            <button
-              type="button"
-              class="absolute top-1/2 right-1 flex -translate-y-1/2 p-1 text-neutral-500 transition-colors hover:text-ink"
-              @click="closeSearch"
-            >
-              <Icon name="material-symbols:close" class="size-5" aria-hidden="true" />
-              <span class="sr-only">Close search</span>
-            </button>
-          </div>
-          <button
-            v-else
-            ref="searchButton"
-            type="button"
-            class="inline-flex shrink-0 items-center bevel-corner border border-line p-2 transition-colors hover:border-ink"
-            @click="openSearch"
-          >
-            <Icon name="material-symbols:search" class="size-4" aria-hidden="true" />
-            <span class="sr-only">Search</span>
-          </button>
+          <SearchToggle
+            v-model="search"
+            v-model:open="searchOpen"
+            placeholder="Title, speaker, tag"
+          />
           <!-- Narrower than its longest venue name on small phones, which then gets cut off. -->
           <label class="relative min-w-0" :class="{ 'max-sm:hidden': searchOpen }">
             <span class="sr-only">Venue</span>

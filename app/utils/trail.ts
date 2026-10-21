@@ -1,5 +1,8 @@
 /** What overviews of the art trail need. */
-export type TrailItem = Pick<Installation, "id" | "slug" | "title" | "venue" | "image"> & {
+export type TrailItem = Pick<
+  Installation,
+  "id" | "slug" | "title" | "venue" | "image" | "medium"
+> & {
   artist: string | null;
 };
 

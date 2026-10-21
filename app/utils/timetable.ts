@@ -22,21 +22,6 @@ export function searchKeywords(event: FestivalEvent): string {
     .join(" ");
 }
 
-/** Lowercase without accents, so "generatif" finds "Génératif". */
-function foldText(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-}
-
-/** Whether every word of the query is in the event's title, speakers, venue or keywords. */
-export function matchesSearch(event: TimetableEvent, query: string): boolean {
-  const words = foldText(query).split(/\s+/).filter(Boolean);
-  const text = foldText([event.title, event.speakers, event.venue, event.keywords].join(" "));
-  return words.every((word) => text.includes(word));
-}
-
 export interface PlacedEvent {
   event: TimetableEvent;
   /** Minutes from the start of the timetable. */

@@ -36,12 +36,14 @@ registerRoute(
   }),
 );
 
-// Schedule and event data, the art trail, and favorites lists.
+// Schedule and event data, the art trail, descriptions to search in, and favorites lists.
 registerRoute(
   ({ url, sameOrigin, request }) =>
     sameOrigin &&
     request.method === "GET" &&
-    ["/api/events", "/api/trail", "/api/lists/"].some((path) => url.pathname.startsWith(path)),
+    ["/api/events", "/api/trail", "/api/search-text", "/api/lists/"].some((path) =>
+      url.pathname.startsWith(path),
+    ),
   new NetworkFirst({
     cacheName: "api",
     networkTimeoutSeconds: NETWORK_TIMEOUT_SECONDS,

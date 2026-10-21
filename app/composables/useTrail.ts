@@ -12,6 +12,7 @@ export function useTrail() {
         artist: installation.artist?.name ?? null,
         venue: installation.venue,
         image: installation.image,
+        medium: installation.medium,
       })),
     }),
   });
