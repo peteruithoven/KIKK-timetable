@@ -17,6 +17,7 @@ export function useSchedule() {
         venue: event.venue,
         image: event.image,
         speakers: speakerLine(event),
+        keywords: searchKeywords(event),
       })),
     }),
   });

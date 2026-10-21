@@ -29,19 +29,82 @@ const selectedVenue = computed<string>({
   },
 });
 
-const timetable = computed(() =>
-  buildDayTimetable(
+// Search, kept in the URL (`?q=`) so it's still there when coming back from an event page.
+// Typed into a ref: an input bound to the route would lag behind the navigation.
+const search = ref(typeof route.query.q === "string" ? route.query.q : "");
+const searchOpen = ref(search.value !== "");
+const searchInput = useTemplateRef<HTMLInputElement>("searchInput");
+const searchButton = useTemplateRef<HTMLButtonElement>("searchButton");
+watch(search, (q) => {
+  const { q: _, ...query } = route.query;
+  router.replace({ query: q ? { ...query, q } : query });
+});
+
+async function openSearch() {
+  searchOpen.value = true;
+  await nextTick();
+  searchInput.value?.focus();
+}
+
+async function closeSearch() {
+  search.value = "";
+  searchOpen.value = false;
+  await nextTick();
+  searchButton.value?.focus();
+}
+
+// Once someone stops typing.
+const { $posthog } = useNuxtApp();
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+watch(search, (q) => {
+  clearTimeout(searchTimer);
+  if (!q.trim()) return;
+  searchTimer = setTimeout(() => {
+    $posthog?.capture("timetable_searched", {
+      search_query: q.trim(),
+      results: matches.value.length,
+    });
+  }, 1500);
+});
+onBeforeUnmount(() => clearTimeout(searchTimer));
+
+// Events at the selected venue that match the search, on any day.
+const matches = computed(
+  () =>
     data.value?.events.filter(
       (event) =>
-        event.date === selectedDay.value &&
-        (selectedVenue.value === "all" || findVenue(event.venue)?.key === selectedVenue.value),
+        (selectedVenue.value === "all" || findVenue(event.venue)?.key === selectedVenue.value) &&
+        matchesSearch(event, search.value),
     ) ?? [],
+);
+
+// Columns without matching events are left out.
+const timetable = computed(() =>
+  buildDayTimetable(matches.value.filter((event) => event.date === selectedDay.value)),
+);
+
+// Other days with search results, when the selected day has none.
+const otherMatchingDays = computed(() =>
+  days.value.filter(
+    (day) => day !== selectedDay.value && matches.value.some((event) => event.date === day),
   ),
 );
 
 const selectedBuilding = computed(
   () => venues.value.find((venue) => venue.key === selectedVenue.value)?.name,
 );
+
+const emptyMessage = computed(() => {
+  const q = search.value.trim();
+  return [
+    "Nothing",
+    q && `matching “${q}”`,
+    selectedBuilding.value && `at ${selectedBuilding.value}`,
+    `on ${formatDay(selectedDay.value!, { weekday: "long", day: "numeric", month: "long" })}.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+});
 
 const { listId: favoritesListId, events: favoriteEvents } = useFavorites();
 const online = useOnline();
@@ -55,7 +118,7 @@ const savedScroll = useState<{ key: string; top: number; left: number } | null>(
   "timetable-scroll",
   () => null,
 );
-const scrollKey = computed(() => `${selectedDay.value}|${selectedVenue.value}`);
+const scrollKey = computed(() => `${selectedDay.value}|${selectedVenue.value}|${search.value}`);
 onBeforeUnmount(() => {
   if (!scroller.value) return;
   const { scrollTop: top, scrollLeft: left } = scroller.value;
@@ -139,7 +202,7 @@ useHead({
           </NuxtLink>
         </nav>
       </div>
-      <div class="mt-3 flex items-end justify-between gap-2">
+      <div class="mt-3 flex items-end gap-2">
         <nav aria-label="Days" class="flex shrink-0 gap-2">
           <NuxtLink
             v-for="day in days"
@@ -147,6 +210,7 @@ useHead({
             :to="{ query: { ...route.query, day } }"
             replace
             :aria-current="day === selectedDay ? 'date' : undefined"
+            :class="{ 'max-sm:w-10': searchOpen }"
             class="flex w-14 shrink-0 flex-col items-center bevel-corner border border-line py-1.5 transition-colors hover:border-ink aria-[current]:clip-corner aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-paper"
           >
             <span class="text-[11px] uppercase">{{ formatDay(day, { weekday: "short" }) }}</span>
@@ -155,30 +219,74 @@ useHead({
             </span>
           </NuxtLink>
         </nav>
-        <!-- Narrower than its longest venue name on small phones, which then gets cut off. -->
-        <label class="relative min-w-0">
-          <span class="sr-only">Venue</span>
-          <select
-            v-model="selectedVenue"
-            class="max-w-full bevel-corner appearance-none truncate border py-2 pr-8 pl-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors"
-            :class="
-              selectedVenue === 'all'
-                ? 'border-line bg-paper text-ink hover:border-ink'
-                : 'clip-corner border-ink bg-ink text-paper'
-            "
+        <div class="flex min-w-0 flex-1 justify-end gap-2">
+          <!-- On phones it takes the place of the venue select, which keeps filtering, and the days
+          get narrower. -->
+          <div v-if="searchOpen" role="search" class="relative min-w-0 flex-1 sm:max-w-72">
+            <label>
+              <span class="sr-only">Search</span>
+              <Icon
+                name="material-symbols:search"
+                class="pointer-events-none absolute top-1/2 left-2 size-5 -translate-y-1/2"
+                aria-hidden="true"
+              />
+              <!-- 16px text, or iOS zooms in on focus. -->
+              <input
+                ref="searchInput"
+                v-model="search"
+                type="search"
+                enterkeyhint="search"
+                placeholder="Title, speaker, tag"
+                class="w-full bevel-corner appearance-none border border-ink bg-paper py-1 pr-9 pl-8 text-base leading-6 outline-none placeholder:text-neutral-500 [&::-webkit-search-cancel-button]:hidden"
+                @keydown.esc="closeSearch"
+                @keydown.enter="searchInput?.blur()"
+                @blur="search.trim() || (searchOpen = false)"
+              />
+            </label>
+            <button
+              type="button"
+              class="absolute top-1/2 right-1 flex -translate-y-1/2 p-1 text-neutral-500 transition-colors hover:text-ink"
+              @click="closeSearch"
+            >
+              <Icon name="material-symbols:close" class="size-5" aria-hidden="true" />
+              <span class="sr-only">Close search</span>
+            </button>
+          </div>
+          <button
+            v-else
+            ref="searchButton"
+            type="button"
+            class="inline-flex shrink-0 items-center bevel-corner border border-line p-2 transition-colors hover:border-ink"
+            @click="openSearch"
           >
-            <option value="all">All venues</option>
-            <option v-for="venue in venues" :key="venue.key" :value="venue.key">
-              {{ venue.name }}
-            </option>
-          </select>
-          <Icon
-            name="material-symbols:keyboard-arrow-down"
-            class="pointer-events-none absolute top-1/2 right-2 size-5 -translate-y-1/2"
-            :class="selectedVenue === 'all' ? 'text-ink' : 'text-paper'"
-            aria-hidden="true"
-          />
-        </label>
+            <Icon name="material-symbols:search" class="size-4" aria-hidden="true" />
+            <span class="sr-only">Search</span>
+          </button>
+          <!-- Narrower than its longest venue name on small phones, which then gets cut off. -->
+          <label class="relative min-w-0" :class="{ 'max-sm:hidden': searchOpen }">
+            <span class="sr-only">Venue</span>
+            <select
+              v-model="selectedVenue"
+              class="max-w-full bevel-corner appearance-none truncate border py-2 pr-8 pl-3 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors"
+              :class="
+                selectedVenue === 'all'
+                  ? 'border-line bg-paper text-ink hover:border-ink'
+                  : 'clip-corner border-ink bg-ink text-paper'
+              "
+            >
+              <option value="all">All venues</option>
+              <option v-for="venue in venues" :key="venue.key" :value="venue.key">
+                {{ venue.name }}
+              </option>
+            </select>
+            <Icon
+              name="material-symbols:keyboard-arrow-down"
+              class="pointer-events-none absolute top-1/2 right-2 size-5 -translate-y-1/2"
+              :class="selectedVenue === 'all' ? 'text-ink' : 'text-paper'"
+              aria-hidden="true"
+            />
+          </label>
+        </div>
       </div>
     </header>
 
@@ -189,10 +297,21 @@ useHead({
       <p v-if="error && !data" class="p-4 text-neutral-500">
         The schedule couldn't be loaded. Please try again later.
       </p>
-      <p v-else-if="selectedDay && timetable.venues.length === 0" class="p-4 text-neutral-500">
-        Nothing at {{ selectedBuilding }} on
-        {{ formatDay(selectedDay, { weekday: "long", day: "numeric", month: "long" }) }}.
-      </p>
+      <div v-else-if="selectedDay && timetable.venues.length === 0" class="p-4 text-neutral-500">
+        <p>{{ emptyMessage }}</p>
+        <p v-if="search.trim() && otherMatchingDays.length" class="mt-2 flex flex-wrap gap-x-3">
+          <span>Results on other days:</span>
+          <NuxtLink
+            v-for="day in otherMatchingDays"
+            :key="day"
+            :to="{ query: { ...route.query, day } }"
+            replace
+            class="text-ink underline underline-offset-2"
+          >
+            {{ formatDay(day, { weekday: "long", day: "numeric" }) }}
+          </NuxtLink>
+        </p>
+      </div>
       <TimetableGrid
         v-else-if="selectedDay"
         :date="selectedDay"

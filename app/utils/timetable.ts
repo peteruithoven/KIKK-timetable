@@ -4,12 +4,37 @@ export type TimetableEvent = Pick<
 > & {
   /** Speaker names for the card, null when there are none or they're the title. */
   speakers: string | null;
+  /** Searched text besides the title and venue, see `searchKeywords()`. */
+  keywords: string;
 };
 
 export function speakerLine(event: FestivalEvent): string | null {
   const names = event.speakers.map((speaker) => speaker.name).join(", ");
   if (!names || names.toLowerCase() === event.title.trim().toLowerCase()) return null;
   return names;
+}
+
+/** Speakers, moderator, their companies, track and tags. */
+export function searchKeywords(event: FestivalEvent): string {
+  const people = [...event.speakers, ...(event.moderator ? [event.moderator] : [])];
+  return [...people.flatMap((person) => [person.name, person.company]), event.track, ...event.tags]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Lowercase without accents, so "generatif" finds "Génératif". */
+function foldText(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+/** Whether every word of the query is in the event's title, speakers, venue or keywords. */
+export function matchesSearch(event: TimetableEvent, query: string): boolean {
+  const words = foldText(query).split(/\s+/).filter(Boolean);
+  const text = foldText([event.title, event.speakers, event.venue, event.keywords].join(" "));
+  return words.every((word) => text.includes(word));
 }
 
 export interface PlacedEvent {
