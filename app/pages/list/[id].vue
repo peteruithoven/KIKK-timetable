@@ -412,8 +412,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
               :to="eventPath(event)"
               class="flex gap-4 py-3 transition-colors hover:bg-block"
             >
-              <span class="w-12 shrink-0 text-sm text-neutral-500 tabular-nums">
-                {{ event.start }}
+              <!-- The end time sits at the bottom of the item. -->
+              <span
+                class="flex w-12 shrink-0 flex-col justify-between gap-1 text-sm text-neutral-500 tabular-nums"
+              >
+                <span>{{ event.start }}</span>
+                <span v-if="event.end"><span class="sr-only">to </span>{{ event.end }}</span>
               </span>
               <span class="min-w-0">
                 <span class="block font-display leading-tight font-semibold">
