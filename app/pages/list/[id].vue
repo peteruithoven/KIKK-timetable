@@ -28,10 +28,17 @@ const days = computed(() => {
   }
   return [...byDay]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, events]) => ({
-      date,
-      events: events.sort((a, b) => (a.start ?? "").localeCompare(b.start ?? "")),
-    }));
+    .map(([date, events]) => {
+      events.sort((a, b) => (a.start ?? "").localeCompare(b.start ?? ""));
+      return {
+        date,
+        events: events.map((event, index) => ({
+          event,
+          // Time since the previous favorite ended, negative when they overlap.
+          gap: index ? minutesBetween(events[index - 1]!, event) : null,
+        })),
+      };
+    });
 });
 
 const installations = computed(
@@ -407,7 +414,20 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           {{ formatDay(day.date, { weekday: "long", day: "numeric", month: "long" }) }}
         </h2>
         <ul class="mt-2 border-t border-ink">
-          <li v-for="event in day.events" :key="event.id" class="border-b border-line">
+          <li
+            v-for="{ event, gap } in day.events"
+            :key="event.id"
+            class="relative border-b border-line"
+          >
+            <!-- On the line above, below the previous favorite's end time. -->
+            <span
+              v-if="gap !== null"
+              class="absolute -top-2 left-0 bg-paper pr-1.5 text-[11px] leading-4 tabular-nums"
+              :class="gap < 0 ? 'text-red-700/70' : 'text-neutral-400'"
+            >
+              <span class="sr-only">{{ gap < 0 ? "Overlaps by" : "Break of" }} </span>
+              {{ gap < 0 ? `−${formatDuration(-gap)}` : gap ? formatDuration(gap) : "No break" }}
+            </span>
             <NuxtLink
               :to="eventPath(event)"
               class="flex gap-4 py-3 transition-colors hover:bg-block"

@@ -133,6 +133,28 @@ export function buildDayTimetable(events: TimetableEvent[]): DayTimetable {
   return { startMinute, length: endMinute - startMinute, startsAt, venues };
 }
 
+/**
+ * Minutes from the end of one event to the start of a later one on the same day, negative when
+ * they overlap. Null when either time is missing.
+ */
+export function minutesBetween(
+  previous: Pick<TimetableEvent, "start" | "end">,
+  next: Pick<TimetableEvent, "start">,
+): number | null {
+  if (!previous.start || !previous.end || !next.start) return null;
+  let end = toMinutes(previous.end);
+  // Runs past midnight.
+  if (end <= toMinutes(previous.start)) end += 24 * 60;
+  return toMinutes(next.start) - end;
+}
+
+/** `75` → `"1 h 15 min"`. */
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return [hours && `${hours} h`, (rest || !hours) && `${rest} min`].filter(Boolean).join(" ");
+}
+
 /** `"2026-10-22"` → `"Thu 22 Oct"`. */
 export function formatDay(date: string, options: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat("en-GB", { ...options, timeZone: "UTC" }).format(
