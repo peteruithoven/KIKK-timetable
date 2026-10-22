@@ -93,13 +93,19 @@ useHead({
       <FavoriteButton :id="event.id" />
     </nav>
 
-    <img
+    <PhotoLink
       v-if="event.image"
-      :src="resizedImage(event.image, 1600, 900)"
-      crossorigin="anonymous"
-      alt=""
-      class="aspect-video max-h-[70vh] w-full bg-ink object-cover"
-    />
+      :src="event.image"
+      name="cover"
+      :label="`Photo of ${event.title}`"
+    >
+      <img
+        :src="resizedImage(event.image, 1600, 900)"
+        crossorigin="anonymous"
+        alt=""
+        class="block aspect-video max-h-[70vh] w-full bg-ink object-cover"
+      />
+    </PhotoLink>
 
     <article class="mx-auto max-w-5xl px-4 pt-6 pb-16">
       <div class="flex flex-wrap gap-2">
@@ -200,11 +206,16 @@ useHead({
       <EventGallery :images="event.gallery" :credit="event.credit" />
       <EventSection v-if="event.speakers.length" :label="speakersLabel">
         <div class="flex flex-col gap-8">
-          <EventPerson v-for="person in event.speakers" :key="person.name" :person="person" />
+          <EventPerson
+            v-for="(person, index) in event.speakers"
+            :key="person.name"
+            :person="person"
+            :photo-name="`speaker-${index + 1}`"
+          />
         </div>
       </EventSection>
       <EventSection v-if="event.moderator" label="Moderator">
-        <EventPerson :person="event.moderator" />
+        <EventPerson :person="event.moderator" photo-name="moderator" />
       </EventSection>
     </article>
   </div>
