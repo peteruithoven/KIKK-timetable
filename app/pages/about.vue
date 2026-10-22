@@ -25,7 +25,7 @@ const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true })
     </nav>
 
     <main class="mx-auto max-w-5xl px-4 pt-6 pb-16">
-      <p class="font-display text-[11px] font-semibold tracking-[0.3em] text-neutral-500 uppercase">
+      <p class="font-display text-[11px] font-semibold tracking-[0.3em] text-ink-muted uppercase">
         KIKK Festival 2026
       </p>
       <h1
@@ -61,7 +61,7 @@ const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true })
           >, the official source, with changes usually appearing here within a few minutes. If KIKK
           can’t be reached or you’re offline, you can still browse the last saved programme.
         </p>
-        <p class="text-neutral-700">
+        <p class="text-ink-soft">
           The code is mostly AI-generated and available
           <a
             href="https://github.com/peteruithoven/KIKK-timetable"
@@ -72,7 +72,7 @@ const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true })
           >
           under the MIT license.
         </p>
-        <p class="text-neutral-700">
+        <p class="text-ink-soft">
           Questions or feedback? Reach me at
           <a href="mailto:peter@peteruithoven.nl" :class="linkClass">peter@peteruithoven.nl</a>.
         </p>
@@ -80,7 +80,7 @@ const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true })
 
       <section id="share" class="mt-10 max-w-prose scroll-mt-20 border-y border-line py-6">
         <h2 class="font-display text-2xl font-extrabold tracking-tight uppercase">Share</h2>
-        <p class="mt-2 text-neutral-700">
+        <p class="mt-2 text-ink-soft">
           Know someone heading to the festival? Send them the link, or let them scan the code.
         </p>
         <div class="mt-5 flex flex-wrap items-start gap-6">
@@ -92,7 +92,7 @@ const appUrl = `${useRequestURL({ xForwardedHost: true, xForwardedProto: true })
               text="Unofficial timetable for KIKK Festival 2026, with talks, parties, the art trail and your favorites."
             />
             <CopyButton :value="appUrl" />
-            <p class="mt-1 text-sm break-all text-neutral-500">{{ appUrl }}</p>
+            <p class="mt-1 text-sm break-all text-ink-muted">{{ appUrl }}</p>
           </div>
         </div>
       </section>

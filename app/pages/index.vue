@@ -127,7 +127,7 @@ useHead({
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
           <p
-            class="font-display text-[11px] font-semibold tracking-[0.3em] text-neutral-500 uppercase"
+            class="font-display text-[11px] font-semibold tracking-[0.3em] text-ink-muted uppercase"
           >
             KIKK <span class="max-sm:hidden">Festival</span> 2026
           </p>
@@ -136,7 +136,7 @@ useHead({
           >
             Timetable
           </h1>
-          <p v-if="!online || data?.stale" class="mt-1 text-xs text-neutral-500">
+          <p v-if="!online || data?.stale" class="mt-1 text-xs text-ink-muted">
             Offline · as of {{ updatedAt }}
           </p>
         </div>
@@ -149,7 +149,7 @@ useHead({
           >
             <Icon name="material-symbols:star-outline" class="size-4" aria-hidden="true" />
             <span class="max-sm:sr-only">Favorites</span>
-            <span class="text-neutral-500 tabular-nums">{{ favoriteEvents.length }}</span>
+            <span class="text-ink-muted tabular-nums">{{ favoriteEvents.length }}</span>
           </NuxtLink>
           <NuxtLink
             to="/trail"
@@ -231,10 +231,10 @@ useHead({
       ref="scroller"
       class="min-h-0 flex-1 touch-pan-x touch-pan-y overflow-auto overscroll-contain"
     >
-      <p v-if="error && !data" class="p-4 text-neutral-500">
+      <p v-if="error && !data" class="p-4 text-ink-muted">
         The schedule couldn't be loaded. Please try again later.
       </p>
-      <div v-else-if="selectedDay && timetable.venues.length === 0" class="p-4 text-neutral-500">
+      <div v-else-if="selectedDay && timetable.venues.length === 0" class="p-4 text-ink-muted">
         <p>{{ emptyMessage }}</p>
         <p v-if="search.trim() && otherMatchingDays.length" class="mt-2 flex flex-wrap gap-x-3">
           <span>Results on other days:</span>

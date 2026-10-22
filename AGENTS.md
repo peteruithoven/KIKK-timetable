@@ -102,6 +102,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 ## UI
 
 - Kikk style: black (`ink`) and white, a little gray, no rounded corners, Inter Tight (`font-display`) and Poppins, self-hosted through Fontsource. Tokens are in `app/assets/css/main.css`.
+- Dark mode follows the system setting (`prefers-color-scheme`): `main.css` swaps the tokens, so `bg-ink text-paper` turns light on dark. Use `ink-soft`, `ink-muted` and `ink-faint` for gray text, not Tailwind's `neutral-*`, which don't switch. `palette-light` keeps the light tokens for parts that look the same in both modes: the photo viewer, the map's container and the full screen QR code. `public/offline.html` has its own copy of the colors.
 - Cut top right corner: `clip-corner` for filled elements (bevel, `clip-path` fallback) and `bevel-corner` for outlined ones (bevel only; a `clip-path` would leave a gap in the border).
 - Icons: `<Icon name="material-symbols:…">` from the locally installed `@iconify-json/material-symbols`. The Iconify API fallback is off, so install the `@iconify-json/*` package before using another set, then restart the dev server.
 - Timetable: everything scales with `pxPerMinute` (pinch zoom, `useVerticalZoom`). The body cells of the grid have explicit grid positions so the favorites bar layer can overlap them. Favorite bars are sticky, positioned with a spacer (a margin can't move out of a sticky container), and shown only when their block is out of view (IntersectionObserver).

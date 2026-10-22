@@ -19,9 +19,7 @@ function toggle() {
     :aria-pressed="favorite"
     class="inline-flex items-center gap-2 bevel-corner border border-ink px-3 py-1.5 font-display text-xs font-bold tracking-[0.12em] uppercase transition-colors"
     :class="
-      favorite
-        ? 'clip-corner bg-ink text-paper hover:bg-neutral-700'
-        : 'hover:bg-ink hover:text-paper'
+      favorite ? 'clip-corner bg-ink text-paper hover:bg-ink-soft' : 'hover:bg-ink hover:text-paper'
     "
     @click="toggle"
   >

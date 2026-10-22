@@ -26,6 +26,6 @@ const favorite = computed(() => isFavorite(props.item.id));
       </template>
       {{ item.title }}
     </span>
-    <span v-if="item.artist" class="mt-0.5 block text-sm text-neutral-500">{{ item.artist }}</span>
+    <span v-if="item.artist" class="mt-0.5 block text-sm text-ink-muted">{{ item.artist }}</span>
   </NuxtLink>
 </template>

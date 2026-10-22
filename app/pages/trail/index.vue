@@ -58,7 +58,7 @@ useSeoMeta({
     </nav>
 
     <main class="mx-auto max-w-5xl px-4 pt-6 pb-16">
-      <p class="font-display text-[11px] font-semibold tracking-[0.3em] text-neutral-500 uppercase">
+      <p class="font-display text-[11px] font-semibold tracking-[0.3em] text-ink-muted uppercase">
         KIKK Festival 2026
       </p>
       <h1
@@ -67,14 +67,14 @@ useSeoMeta({
         Art Trail
       </h1>
       <!-- As announced on kikkfestival.be/public/art-trail. -->
-      <p class="mt-3 max-w-prose text-neutral-700">
+      <p class="mt-3 max-w-prose text-ink-soft">
         Interactive and immersive installations across Namur. 22–25 October, 10:00–18:00.
       </p>
 
-      <p v-if="error && !data" class="mt-8 text-neutral-500">
+      <p v-if="error && !data" class="mt-8 text-ink-muted">
         The art trail couldn't be loaded. Please try again later.
       </p>
-      <p v-else-if="data && groups.length === 0" class="mt-8 text-neutral-500">
+      <p v-else-if="data && groups.length === 0" class="mt-8 text-ink-muted">
         Nothing matching “{{ search.trim() }}”.
       </p>
       <!-- Anchors for the map's links, clear of the sticky nav. -->
@@ -91,7 +91,7 @@ useSeoMeta({
           <NuxtLink
             v-if="group.mapPath"
             :to="group.mapPath"
-            class="inline-flex shrink-0 items-center gap-1 font-display text-xs font-semibold tracking-[0.12em] text-neutral-500 uppercase transition-colors hover:text-ink"
+            class="inline-flex shrink-0 items-center gap-1 font-display text-xs font-semibold tracking-[0.12em] text-ink-muted uppercase transition-colors hover:text-ink"
           >
             <Icon name="material-symbols:location-on-outline" class="size-4" aria-hidden="true" />
             Map
