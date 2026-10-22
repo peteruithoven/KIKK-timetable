@@ -45,10 +45,11 @@ function selectVenue(key: string | null) {
 const container = useTemplateRef<HTMLDivElement>("container");
 let map: MapLibreMap | undefined;
 let styleLoaded = false;
+const { canLocate, state: locateState, addTo: addGeolocation, locate } = useMapGeolocation();
 
 onMounted(async () => {
   // MapLibre needs WebGL and the DOM, and it's big, so it's only loaded on this page.
-  const { Map, LngLatBounds, setWorkerUrl } = await import("maplibre-gl");
+  const { Map, LngLatBounds, GeolocateControl, setWorkerUrl } = await import("maplibre-gl");
   if (!container.value) return;
   setWorkerUrl(workerUrl);
   const bounds = new LngLatBounds();
@@ -75,6 +76,7 @@ onMounted(async () => {
     onVenueClick(instance, selectVenue);
     styleLoaded = true;
   });
+  addGeolocation(instance, GeolocateControl);
   map = instance;
 });
 
@@ -109,12 +111,11 @@ useSeoMeta({ title: "Map · KIKK 2026" });
     </nav>
     <div class="relative min-h-0 flex-1">
       <div ref="container" class="map size-full bg-ink" />
-      <!-- Where MapLibre puts its controls. -->
-      <MapZoomControl
-        class="absolute top-2.5 right-2.5"
-        @zoom-in="map?.zoomIn()"
-        @zoom-out="map?.zoomOut()"
-      />
+      <!-- Where MapLibre puts its controls, as far apart as its own. -->
+      <div class="absolute top-2.5 right-2.5 flex flex-col gap-2.5">
+        <MapZoomControl @zoom-in="map?.zoomIn()" @zoom-out="map?.zoomOut()" />
+        <MapLocateControl v-if="canLocate" :state="locateState" @locate="locate" />
+      </div>
     </div>
     <MapVenueBar
       v-if="selectedVenue"
@@ -134,5 +135,9 @@ useSeoMeta({ title: "Map · KIKK 2026" });
 }
 .map :deep(.maplibregl-ctrl-attrib a) {
   color: inherit;
+}
+/* Only holds the GeolocateControl, which MapLocateControl replaces. */
+.map :deep(.maplibregl-ctrl-top-right) {
+  display: none;
 }
 </style>
