@@ -90,7 +90,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 
 - `@vite-pwa/nuxt` with a custom worker in `service-worker/sw.ts` (own `tsconfig.json`). It only runs in production builds. The manifest is `public/site.webmanifest` (`manifest: false` in the module).
 - The module strips `.html` from precached URLs, so `public/offline.html` is cached in the worker's install step instead. Don't add `html` to `globPatterns`.
-- The manifest has no `theme_color` on purpose. Installed apps (Chrome, Firefox) paint Android's navigation bar with it, while its buttons follow the phone's dark mode: white on white. Without it the bar follows the phone's theme. The status bar uses the `theme-color` meta tag.
+- The manifest has no `theme_color` on purpose. Installed apps (Chrome, Firefox) paint Android's navigation bar with it, while its buttons follow the phone's dark mode: white on white. Without it Chrome leaves the bar unpainted and the app's window shows through, which it fills with `background_color`. The manifest has no dark variants and a page can't change the bar, so `background_color` is the dark `paper` (`#121212`): a dark bar (and splash screen) in both modes. The status bar uses the `theme-color` meta tags, which follow the mode. Installed apps pick up manifest changes when Chrome next updates the WebAPK (about a day), or after reinstalling.
 
 ## Analytics
 
