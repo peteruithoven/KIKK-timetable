@@ -21,11 +21,11 @@ const bio = computed(() => localize(props.person.bio));
     />
     <div class="min-w-0">
       <p class="font-display text-lg leading-tight font-bold">{{ person.name }}</p>
-      <p v-if="details" class="mt-0.5 text-sm text-neutral-500">{{ details }}</p>
+      <p v-if="details" class="mt-0.5 text-sm text-ink-muted">{{ details }}</p>
       <!-- Sanitized on the server, see server/utils/kikk-mapping.ts -->
       <div
         v-if="bio"
-        class="rich-text mt-3 max-w-prose text-sm leading-relaxed text-neutral-700"
+        class="rich-text mt-3 max-w-prose text-sm leading-relaxed text-ink-soft"
         :lang="bio.lang"
         v-html="bio.text"
       />

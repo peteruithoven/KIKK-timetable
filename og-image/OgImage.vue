@@ -12,7 +12,7 @@ useHead({
   <div
     class="relative h-[630px] w-[1200px] overflow-hidden bg-paper px-20 py-[72px] font-light text-ink"
   >
-    <p class="font-display text-[22px] font-semibold tracking-[0.3em] text-neutral-500 uppercase">
+    <p class="font-display text-[22px] font-semibold tracking-[0.3em] text-ink-muted uppercase">
       KIKK Festival 2026
     </p>
     <h1

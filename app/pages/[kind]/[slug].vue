@@ -117,7 +117,7 @@ useHead({
         <span
           v-for="tag in event.tags"
           :key="tag"
-          class="border border-line px-2.5 py-1 font-display text-[11px] font-semibold tracking-[0.12em] text-neutral-600 uppercase"
+          class="border border-line px-2.5 py-1 font-display text-[11px] font-semibold tracking-[0.12em] text-ink-soft uppercase"
         >
           {{ tag }}
         </span>
@@ -132,17 +132,17 @@ useHead({
 
       <dl class="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-line py-5 sm:grid-cols-4">
         <div>
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Date</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Date</dt>
           <dd class="mt-1 font-display font-bold">
             {{ formatDay(event.date, { weekday: "long", day: "numeric", month: "long" }) }}
           </dd>
         </div>
         <div v-if="time">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Time</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Time</dt>
           <dd class="mt-1 font-display font-bold tabular-nums">{{ time }}</dd>
         </div>
         <div v-if="venue">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Venue</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Venue</dt>
           <dd class="mt-1 font-display font-bold">
             <NuxtLink
               v-if="venue.mapPath"
@@ -155,7 +155,7 @@ useHead({
           </dd>
         </div>
         <div v-if="venue?.room">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Room</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Room</dt>
           <dd class="mt-1 font-display font-bold">{{ venue.room }}</dd>
         </div>
       </dl>
@@ -165,7 +165,7 @@ useHead({
           :href="event.url"
           target="_blank"
           rel="noopener"
-          class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+          class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft"
         >
           More on kikkfestival.be
           <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
@@ -192,7 +192,7 @@ useHead({
       </EventSection>
       <EventSection v-if="description" label="About">
         <div
-          class="rich-text max-w-prose leading-relaxed text-neutral-700"
+          class="rich-text max-w-prose leading-relaxed text-ink-soft"
           :lang="description.lang"
           v-html="description.text"
         />

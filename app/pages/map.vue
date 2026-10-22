@@ -110,7 +110,8 @@ useSeoMeta({ title: "Map · KIKK 2026" });
       <h1 class="font-display text-xs font-bold tracking-[0.12em] uppercase">Map</h1>
     </nav>
     <div class="relative min-h-0 flex-1">
-      <div ref="container" class="map size-full bg-ink" />
+      <!-- The map is dark in both modes. -->
+      <div ref="container" class="map palette-light size-full bg-ink" />
       <!-- Where MapLibre puts its controls, as far apart as its own. -->
       <div class="absolute top-2.5 right-2.5 flex flex-col gap-2.5">
         <MapZoomControl @zoom-in="map?.zoomIn()" @zoom-out="map?.zoomOut()" />

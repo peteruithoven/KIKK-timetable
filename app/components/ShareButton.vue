@@ -22,7 +22,7 @@ function share() {
   <button
     v-if="canShare"
     type="button"
-    class="inline-flex items-center gap-2 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+    class="inline-flex items-center gap-2 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft"
     @click="share"
   >
     <Icon name="material-symbols:share" class="size-4" aria-hidden="true" /> Share

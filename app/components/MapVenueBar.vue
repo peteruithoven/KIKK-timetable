@@ -30,7 +30,7 @@ defineEmits<{ close: [] }>();
         :href="venueDirectionsUrl(venue)"
         target="_blank"
         rel="noopener"
-        class="inline-flex items-center gap-1.5 clip-corner bg-ink px-3 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+        class="inline-flex items-center gap-1.5 clip-corner bg-ink px-3 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft"
       >
         <Icon name="material-symbols:directions" class="size-4" aria-hidden="true" />
         Directions

@@ -269,7 +269,7 @@ useHead({ htmlAttrs: { class: "overflow-hidden" } });
   <dialog
     ref="dialog"
     :aria-label="label"
-    class="m-0 h-dvh max-h-none w-full max-w-none touch-pan-x touch-pan-y flex-col overflow-hidden bg-ink p-0 text-paper backdrop:bg-ink open:flex"
+    class="palette-light m-0 h-dvh max-h-none w-full max-w-none touch-pan-x touch-pan-y flex-col overflow-hidden bg-ink p-0 text-paper backdrop:bg-ink open:flex"
     @close="emit('close')"
   >
     <nav

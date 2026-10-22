@@ -118,7 +118,7 @@ useSeoMeta({
         <span
           v-for="tag in installation.tags"
           :key="tag"
-          class="border border-line px-2.5 py-1 font-display text-[11px] font-semibold tracking-[0.12em] text-neutral-600 uppercase"
+          class="border border-line px-2.5 py-1 font-display text-[11px] font-semibold tracking-[0.12em] text-ink-soft uppercase"
         >
           {{ tag }}
         </span>
@@ -138,7 +138,7 @@ useSeoMeta({
         class="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-line py-5 sm:grid-cols-4"
       >
         <div v-if="venue">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Venue</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Venue</dt>
           <dd class="mt-1 font-display font-bold">
             <NuxtLink
               v-if="venue.mapPath"
@@ -151,11 +151,11 @@ useSeoMeta({
           </dd>
         </div>
         <div v-if="installation.year">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Year</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Year</dt>
           <dd class="mt-1 font-display font-bold">{{ installation.year }}</dd>
         </div>
         <div v-if="installation.medium" class="col-span-2">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Medium</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Medium</dt>
           <dd class="mt-1 font-display font-bold">{{ installation.medium }}</dd>
         </div>
       </dl>
@@ -165,7 +165,7 @@ useSeoMeta({
           :href="installation.url"
           target="_blank"
           rel="noopener"
-          class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+          class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft"
         >
           More on kikkfestival.be
           <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
@@ -193,7 +193,7 @@ useSeoMeta({
       </EventSection>
       <EventSection v-if="description" label="About">
         <div
-          class="rich-text max-w-prose leading-relaxed text-neutral-700"
+          class="rich-text max-w-prose leading-relaxed text-ink-soft"
           :lang="description.lang"
           v-html="description.text"
         />

@@ -49,7 +49,7 @@ function closePhoto() {
         </NuxtLink>
       </li>
     </ul>
-    <p v-if="credit" class="mt-2 text-xs text-neutral-500">Photos: {{ credit }}</p>
+    <p v-if="credit" class="mt-2 text-xs text-ink-muted">Photos: {{ credit }}</p>
     <PhotoViewer
       v-if="openIndex !== null"
       :images="images"
