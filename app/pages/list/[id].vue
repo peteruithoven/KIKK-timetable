@@ -315,6 +315,8 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </dialog>
       </section>
 
+      <NotificationsSection v-if="isOwn" />
+
       <details class="group border-b border-line">
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"

@@ -117,3 +117,68 @@ function hash(value: string): string {
   for (let i = 0; i < value.length; i++) result = (result * 33) ^ value.charCodeAt(i);
   return (result >>> 0).toString(36);
 }
+
+// Notifications before favorites start, sent by the server (server/utils/push.ts).
+interface PushMessage {
+  title: string;
+  body: string;
+  tag: string;
+  url: string;
+}
+
+self.addEventListener("push", (event) => {
+  const message = event.data?.json() as PushMessage | undefined;
+  if (!message) return;
+  event.waitUntil(
+    self.registration.showNotification(message.title, {
+      body: message.body,
+      tag: message.tag,
+      icon: "/web-app-manifest-192x192.png",
+      data: { url: message.url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(
+    (event.notification.data as { url?: string })?.url ?? "/",
+    self.location.origin,
+  ).href;
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const client = windows.find((other) => new URL(other.url).origin === self.location.origin);
+      if (client) {
+        await client.focus();
+        await client.navigate(url).catch(() => self.clients.openWindow(url));
+      } else {
+        await self.clients.openWindow(url);
+      }
+    })(),
+  );
+});
+
+// Browsers can renew a subscription. The server then moves the old one's list to it.
+self.addEventListener("pushsubscriptionchange", (event) => {
+  const { oldSubscription, newSubscription } = event as Event & {
+    oldSubscription?: PushSubscription | null;
+    newSubscription?: PushSubscription | null;
+  };
+  if (!oldSubscription) return;
+  (event as ExtendableEvent).waitUntil(
+    (async () => {
+      const subscription =
+        newSubscription ??
+        (await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: oldSubscription.options.applicationServerKey,
+        }));
+      await fetch("/api/push/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription, replaces: oldSubscription.endpoint }),
+      });
+    })(),
+  );
+});

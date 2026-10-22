@@ -86,6 +86,14 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - Stored lists keep a `paths` map (event id to `kind/slug`, installation id to `trail/slug`) so favorites follow events Kikk re-creates under a new id. It's internal, the API doesn't return it.
 - `/api/lists/<id>/calendar.ics` is a subscribable calendar (`server/utils/ical.ts`).
 
+## Notifications
+
+- Web Push, `NOTIFY_MINUTES_BEFORE` (10) minutes before a favorite starts, toggled in the list page's Notifications section (own list only, `NotificationsSection`, `usePushNotifications`). The section is open until someone closes it (`kikk-notifications-closed` in localStorage). The first favorite on a device opens `NotificationsDialog` once (`kikk-notifications-offered`), only when notifications are off but possible, or on iOS outside the home screen app, where it explains how to install. Only with the service worker, so production builds; iOS only in an app added to the home screen.
+- The server's VAPID key pair is generated on first use and kept in Nitro storage (`push:vapid`); no configuration. Losing it invalidates every subscription, browsers then need to turn notifications on again.
+- Subscriptions are `push:subscriptions:<hash of endpoint>`, linked to a list id, so favorites added on other devices count too. `app/plugins/push.client.ts` sends the subscription again on load and when the device switches lists. The service worker's `pushsubscriptionchange` moves a renewed subscription over (`replaces`).
+- `server/plugins/push-notifications.ts` runs `sendDueNotifications()` (`server/utils/push.ts`) every minute. Each subscription remembers `eventId@startsAt` of what it got, so a moved event notifies again. Push services answering 404 or 410 remove the subscription. The VAPID subject is the site's https origin.
+- `getFestivalEvents()`, `getInstallations()` and `readList()` take an optional `H3Event` for this background job.
+
 ## Offline / PWA
 
 - `@vite-pwa/nuxt` with a custom worker in `service-worker/sw.ts` (own `tsconfig.json`). It only runs in production builds. The manifest is `public/site.webmanifest` (`manifest: false` in the module).
