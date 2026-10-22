@@ -6,6 +6,25 @@
  */
 export type PushStatus = "unknown" | "unsupported" | "install" | "denied" | "off" | "on";
 
+/** The list page's Notifications section was closed, and the first favorite's dialog shown. */
+export type PushFlag = "kikk-notifications-closed" | "kikk-notifications-offered";
+
+export function readPushFlag(key: PushFlag): boolean {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function writePushFlag(key: PushFlag) {
+  try {
+    localStorage.setItem(key, "1");
+  } catch {
+    // Storage can be unavailable, e.g. in private browsing. Then it's shown again.
+  }
+}
+
 function isIos(): boolean {
   return (
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||

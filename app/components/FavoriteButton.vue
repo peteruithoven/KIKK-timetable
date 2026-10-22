@@ -10,7 +10,10 @@ function toggle() {
   const event = favorite.value ? "favorite_removed" : "favorite_added";
   favorites.toggle(props.id);
   $posthog?.capture(event, { content_type: props.id.split(":", 1)[0] });
+  if (event === "favorite_added") notificationsDialog.value?.offer();
 }
+
+const notificationsDialog = useTemplateRef("notificationsDialog");
 </script>
 
 <template>
@@ -30,4 +33,5 @@ function toggle() {
     />
     {{ favorite ? "Favorite" : "Add to favorites" }}
   </button>
+  <NotificationsDialog ref="notificationsDialog" />
 </template>
