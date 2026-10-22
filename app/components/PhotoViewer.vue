@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// `label` names a single image, a gallery's photos are numbered.
+// `label` names a single image (a cover photo, a portrait), a gallery's photos are numbered.
 const props = defineProps<{ images: string[]; index: number; label?: string }>();
+const isGallery = computed(() => props.label === undefined);
 const emit = defineEmits<{ close: []; show: [index: number] }>();
 
 const MAX_ZOOM = 6;
@@ -283,7 +284,7 @@ useHead({ htmlAttrs: { class: "overflow-hidden" } });
       >
         <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Back
       </button>
-      <div v-if="images.length > 1" class="flex items-center gap-2">
+      <div v-if="isGallery" class="flex items-center gap-2">
         <span class="text-xs text-neutral-400">{{ label }}</span>
         <button
           v-for="button in navButtons"
