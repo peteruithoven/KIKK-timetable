@@ -60,7 +60,7 @@ interface StoredList extends FavoritesList {
  * Links favorites to the current schedule and art trail: follows re-created events and
  * installations by slug and fills in slugs.
  */
-async function reconcile(event: H3Event, list: StoredList): Promise<StoredList> {
+async function reconcile(event: H3Event | undefined, list: StoredList): Promise<StoredList> {
   const [{ events }, { installations }] = await Promise.all([
     getFestivalEvents(event),
     getInstallations(event),
@@ -92,7 +92,7 @@ function toPublic({ id, label, events, updatedAt }: StoredList): FavoritesList {
   return { id, ...(label ? { label } : {}), events, updatedAt };
 }
 
-export function readList(event: H3Event, id: string): Promise<FavoritesList | null> {
+export function readList(event: H3Event | undefined, id: string): Promise<FavoritesList | null> {
   return withLock(id, async () => {
     const stored = await storage().getItem<StoredList>(storageKey(id));
     if (!stored) return null;

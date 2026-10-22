@@ -83,7 +83,8 @@ function cachedSource<Data, Value>(source: Source<Data, Value>) {
     };
   }
 
-  return async (event: H3Event): Promise<Cached<Value>> => {
+  /** Without an event, e.g. in a background job, refreshes run unawaited. */
+  return async (event?: H3Event): Promise<Cached<Value>> => {
     const current = await readLatest();
     const isFresh = current && Date.now() - Date.parse(current.fetchedAt) < MAX_AGE;
     const mayRetry = Date.now() - lastFailureAt > RETRY_DELAY;
@@ -92,7 +93,8 @@ function cachedSource<Data, Value>(source: Source<Data, Value>) {
       const pending = refresh();
       if (current) {
         // Answer right away with what we have, update in the background.
-        event.waitUntil(pending.catch(() => {}));
+        const settled = pending.catch(() => {});
+        event?.waitUntil(settled);
       } else {
         try {
           return respond(await pending);
@@ -128,12 +130,12 @@ const trail = cachedSource({
   map: toInstallations,
 });
 
-export async function getFestivalEvents(event: H3Event): Promise<EventsResponse> {
+export async function getFestivalEvents(event?: H3Event): Promise<EventsResponse> {
   const { value: events, ...status } = await schedule(event);
   return { ...status, events };
 }
 
-export async function getInstallations(event: H3Event): Promise<TrailResponse> {
+export async function getInstallations(event?: H3Event): Promise<TrailResponse> {
   const { value: installations, ...status } = await trail(event);
   return { ...status, installations };
 }
