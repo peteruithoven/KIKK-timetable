@@ -425,7 +425,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             <span
               v-if="gap !== null"
               class="absolute -top-2 left-0 bg-paper pr-1.5 text-[11px] leading-4 tabular-nums"
-              :class="gap < (walk ?? 0) ? 'text-red-700/70 dark:text-red-400/80' : 'text-ink-faint'"
+              :class="gap < (walk ?? 0) ? 'text-red-700/80 dark:text-red-400/80' : 'text-ink-faint'"
             >
               <span class="sr-only">{{ gap < 0 ? "Overlaps by" : "Break of" }} </span>
               {{ gap < 0 ? `−${formatDuration(-gap)}` : gap ? formatDuration(gap) : "No break" }}
