@@ -99,14 +99,20 @@ useSeoMeta({
       <FavoriteButton :id="installation.id" />
     </nav>
 
-    <img
+    <PhotoLink
       v-if="installation.heroImage"
-      :src="resizedImage(installation.heroImage, 1600, 900)"
-      crossorigin="anonymous"
-      alt=""
+      :src="installation.heroImage"
+      name="cover"
+      :label="`Photo of ${installation.title}`"
       :class="slideIn"
-      class="aspect-video max-h-[70vh] w-full bg-ink object-cover"
-    />
+    >
+      <img
+        :src="resizedImage(installation.heroImage, 1600, 900)"
+        crossorigin="anonymous"
+        alt=""
+        class="block aspect-video max-h-[70vh] w-full bg-ink object-cover"
+      />
+    </PhotoLink>
 
     <article :class="slideIn" class="mx-auto max-w-5xl px-4 pt-6 pb-16">
       <div class="flex flex-wrap gap-2">
@@ -203,7 +209,7 @@ useSeoMeta({
         v-if="installation.artist && (installation.artist.bio || installation.artist.photo)"
         label="Artist"
       >
-        <EventPerson :person="installation.artist" />
+        <EventPerson :person="installation.artist" photo-name="artist" />
       </EventSection>
       <EventSection v-if="sameVenue.length" :label="`Also at ${venue?.name}`">
         <ul class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
