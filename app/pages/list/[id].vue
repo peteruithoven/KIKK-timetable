@@ -29,7 +29,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => clearInterval(timer));
 // Favorites that are over are hidden until someone asks for them.
-const showPast = ref(false);
+const showPast = useRememberedOpen("past", () => false);
 function togglePast() {
   showPast.value = !showPast.value;
   $posthog?.capture("past_favorites_toggled", { shown: showPast.value });
@@ -81,6 +81,11 @@ const shareUrl = `${origin}${listPath(id)}`;
 // Calendar apps subscribe to this and check it for changes regularly.
 const calendarUrl = `${origin}/api/lists/${id}/calendar.ics`;
 const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(calendarUrl.replace(/^https?:/, "webcal:"))}`;
+
+// This device remembers which sections were opened or closed.
+const shareOpen = useRememberedOpen("share", () => isEmpty.value);
+const calendarOpen = useRememberedOpen("calendar", () => false);
+const listsOpen = useRememberedOpen("lists", () => false);
 
 // Only this browser knows them, so they're loaded after hydration. Empty ones aren't worth
 // switching back to.
@@ -248,7 +253,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
       </template>
 
       <!-- Collapsed, so returning visitors see their favorites right away. -->
-      <details v-if="isOwn" :open="isEmpty" class="group mt-6 border-y border-line">
+      <details
+        v-if="isOwn"
+        :open="shareOpen"
+        class="group mt-6 border-y border-line"
+        @toggle="shareOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -345,7 +355,11 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
 
       <NotificationsSection v-if="isOwn" />
 
-      <details class="group border-b border-line">
+      <details
+        :open="calendarOpen"
+        class="group border-b border-line"
+        @toggle="calendarOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -397,7 +411,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </div>
       </details>
 
-      <details v-if="otherLists.length" class="group border-b border-line">
+      <details
+        v-if="otherLists.length"
+        :open="listsOpen"
+        class="group border-b border-line"
+        @toggle="listsOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >

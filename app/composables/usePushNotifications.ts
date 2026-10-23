@@ -6,8 +6,8 @@
  */
 export type PushStatus = "unknown" | "unsupported" | "install" | "denied" | "off" | "on";
 
-/** The list page's Notifications section was closed, and the first favorite's dialog shown. */
-export type PushFlag = "kikk-notifications-closed" | "kikk-notifications-offered";
+/** The first favorite's dialog was shown. */
+export type PushFlag = "kikk-notifications-offered";
 
 export function readPushFlag(key: PushFlag): boolean {
   try {
