@@ -76,6 +76,8 @@ function goBack(clickEvent: MouseEvent) {
   }
 }
 
+const origin = useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin;
+
 useSeoMeta({
   title: () => `${installation.value?.title} · KIKK 2026`,
   ogTitle: () => installation.value?.title,
@@ -187,6 +189,12 @@ useSeoMeta({
           {{ link.label }}
           <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
         </a>
+        <ShareButton
+          :url="`${origin}${route.path}`"
+          :title="`${installation.title} · KIKK 2026`"
+          tracking-event="installation_shared"
+          secondary
+        />
       </div>
 
       <!-- Intro, description and bio are sanitized on the server, see server/utils/kikk-mapping.ts -->
