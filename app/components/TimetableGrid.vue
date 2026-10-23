@@ -104,12 +104,26 @@ onMounted(() => {
 });
 onBeforeUnmount(() => clearInterval(timer));
 
-const nowTop = computed(() => {
+function timeTop(time: number | null) {
   const { startsAt, length } = props.timetable;
-  if (now.value === null || startsAt === null) return null;
-  const minutes = (now.value - startsAt) / 60_000;
+  if (time === null || startsAt === null) return null;
+  const minutes = (time - startsAt) / 60_000;
   return minutes >= 0 && minutes <= length ? minutes * pxPerMinute.value : null;
-});
+}
+const nowTop = computed(() => timeTop(now.value));
+
+/**
+ * Scrolls the current time to a third of the height below the venue names, when it's on this
+ * day. Returns whether it did.
+ */
+function scrollToNow(scroller: HTMLElement) {
+  const top = timeTop(Date.now());
+  if (top === null || !grid.value) return false;
+  const header = (grid.value.firstElementChild as HTMLElement).offsetHeight;
+  scroller.scrollTop = top - (scroller.clientHeight - header) / 3;
+  return true;
+}
+defineExpose({ scrollToNow });
 </script>
 
 <template>

@@ -110,11 +110,17 @@ onBeforeUnmount(() => {
   const { scrollTop: top, scrollLeft: left } = scroller.value;
   savedScroll.value = { key: scrollKey.value, top, left };
 });
+// Otherwise today starts at the current time.
+const grid = useTemplateRef("grid");
 onMounted(async () => {
   const saved = savedScroll.value;
-  if (saved?.key !== scrollKey.value) return;
   await nextTick();
-  scroller.value?.scrollTo(saved.left, saved.top);
+  if (saved?.key === scrollKey.value) scroller.value?.scrollTo(saved.left, saved.top);
+  else if (scroller.value) grid.value?.scrollToNow(scroller.value);
+});
+watch(selectedDay, async () => {
+  await nextTick();
+  if (scroller.value) grid.value?.scrollToNow(scroller.value);
 });
 
 const updatedAt = computed(() =>
@@ -291,6 +297,7 @@ useHead({
       </div>
       <TimetableGrid
         v-else-if="selectedDay"
+        ref="grid"
         :date="selectedDay"
         :timetable="timetable"
         :zoom="zoom"
