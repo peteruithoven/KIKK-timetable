@@ -186,6 +186,13 @@ useHead({
         >
           Tickets <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
         </a>
+        <ShareButton
+          :url="`${origin}${route.path}`"
+          :title="`${pageTitle} · KIKK 2026`"
+          tracking-event="event_shared"
+          :tracking-properties="{ event_kind: event.kind }"
+          secondary
+        />
       </div>
 
       <!-- Intro, description and bios are sanitized on the server, see server/utils/kikk-mapping.ts -->
