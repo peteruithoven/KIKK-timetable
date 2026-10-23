@@ -42,6 +42,15 @@ const days = computed(() => {
     });
 });
 
+// Only known on the client, so the server render shows every favorite as upcoming.
+const now = ref<number | null>(null);
+let timer: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  now.value = Date.now();
+  timer = setInterval(() => (now.value = Date.now()), 30_000);
+});
+onBeforeUnmount(() => clearInterval(timer));
+
 const installations = computed(
   () => trail.value?.installations.filter((item) => favoriteIds.value.has(item.id)) ?? [],
 );
@@ -433,9 +442,11 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
               {{ gap < 0 ? `−${formatDuration(-gap)}` : gap ? formatDuration(gap) : "No break" }}
               <template v-if="walk"> · {{ walk }} min walk</template>
             </span>
+            <!-- Finished ones are grayed out. -->
             <NuxtLink
               :to="eventPath(event)"
-              class="flex gap-4 py-3 transition-colors hover:bg-block"
+              class="flex gap-4 py-3 transition-[color,background-color,opacity] hover:bg-block"
+              :class="{ 'opacity-50': now !== null && hasEnded(event, now) }"
             >
               <!-- The end time sits at the bottom of the item. -->
               <span
