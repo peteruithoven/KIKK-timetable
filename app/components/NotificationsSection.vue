@@ -5,12 +5,7 @@ const busy = ref(false);
 const failed = ref(false);
 
 // Open until someone closes it, so it's noticed.
-const open = ref(true);
-onMounted(() => (open.value = !readPushFlag("kikk-notifications-closed")));
-function onToggle(event: Event) {
-  open.value = (event.target as HTMLDetailsElement).open;
-  if (!open.value) writePushFlag("kikk-notifications-closed");
-}
+const open = useRememberedOpen("notifications", () => true);
 
 async function toggle() {
   busy.value = true;
@@ -32,7 +27,7 @@ async function toggle() {
 </script>
 
 <template>
-  <details :open="open" class="group border-b border-line" @toggle="onToggle">
+  <details :open="open" class="group border-b border-line" @toggle="open = detailsOpen($event)">
     <summary
       class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
     >

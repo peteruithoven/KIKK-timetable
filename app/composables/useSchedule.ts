@@ -14,6 +14,7 @@ export function useSchedule() {
         start: event.start,
         end: event.end,
         startsAt: event.startsAt,
+        endsAt: event.endsAt,
         venue: event.venue,
         image: event.image,
         speakers: speakerLine(event),

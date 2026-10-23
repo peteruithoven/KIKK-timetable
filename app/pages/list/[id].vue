@@ -20,6 +20,21 @@ const favoriteIds = computed(
   () => new Set(isOwn.value ? favorites.events.value : list.value?.events),
 );
 
+// From the server render, so hydration hides the same favorites, then kept up to date.
+const now = useState("list-now", () => Date.now());
+let timer: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  now.value = Date.now();
+  timer = setInterval(() => (now.value = Date.now()), 30_000);
+});
+onBeforeUnmount(() => clearInterval(timer));
+// Favorites that are over are hidden until someone asks for them.
+const showPast = useRememberedOpen("past", () => false);
+function togglePast() {
+  showPast.value = !showPast.value;
+  $posthog?.capture("past_favorites_toggled", { shown: showPast.value });
+}
+
 const days = computed(() => {
   const byDay = new Map<string, TimetableEvent[]>();
   for (const event of schedule.value?.events ?? []) {
@@ -34,10 +49,23 @@ const days = computed(() => {
         date,
         events: events.map((event, index) => ({
           event,
+          past: hasEnded(event, now.value),
           // Time since the previous favorite ended, negative when they overlap.
           gap: index ? minutesBetween(events[index - 1]!, event) : null,
           walk: index ? walkingMinutes(events[index - 1]!.venue, event.venue) : null,
         })),
+      };
+    })
+    .map((day) => {
+      const pastCount = day.events.filter((item) => item.past).length;
+      const events = showPast.value ? day.events : day.events.filter((item) => !item.past);
+      return {
+        ...day,
+        pastCount,
+        // No break shown to a favorite that's hidden.
+        events: events.map((item, index) =>
+          index || showPast.value || !pastCount ? item : { ...item, gap: null },
+        ),
       };
     });
 });
@@ -53,6 +81,11 @@ const shareUrl = `${origin}${listPath(id)}`;
 // Calendar apps subscribe to this and check it for changes regularly.
 const calendarUrl = `${origin}/api/lists/${id}/calendar.ics`;
 const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(calendarUrl.replace(/^https?:/, "webcal:"))}`;
+
+// This device remembers which sections were opened or closed.
+const shareOpen = useRememberedOpen("share", () => isEmpty.value);
+const calendarOpen = useRememberedOpen("calendar", () => false);
+const listsOpen = useRememberedOpen("lists", () => false);
 
 // Only this browser knows them, so they're loaded after hydration. Empty ones aren't worth
 // switching back to.
@@ -220,7 +253,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
       </template>
 
       <!-- Collapsed, so returning visitors see their favorites right away. -->
-      <details v-if="isOwn" :open="isEmpty" class="group mt-6 border-y border-line">
+      <details
+        v-if="isOwn"
+        :open="shareOpen"
+        class="group mt-6 border-y border-line"
+        @toggle="shareOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -317,7 +355,11 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
 
       <NotificationsSection v-if="isOwn" />
 
-      <details class="group border-b border-line">
+      <details
+        :open="calendarOpen"
+        class="group border-b border-line"
+        @toggle="calendarOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -369,7 +411,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </div>
       </details>
 
-      <details v-if="otherLists.length" class="group border-b border-line">
+      <details
+        v-if="otherLists.length"
+        :open="listsOpen"
+        class="group border-b border-line"
+        @toggle="listsOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -417,10 +464,28 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           {{ formatDay(day.date, { weekday: "long", day: "numeric", month: "long" }) }}
         </h2>
         <ul class="mt-2 border-t border-ink">
+          <li v-if="day.pastCount" class="border-b border-line">
+            <button
+              type="button"
+              :aria-expanded="showPast"
+              class="flex w-full items-center gap-2 py-2.5 text-left text-sm text-ink-muted transition-colors hover:bg-block hover:text-ink"
+              @click="togglePast"
+            >
+              <Icon
+                name="material-symbols:expand-more"
+                class="size-5 shrink-0 transition-transform"
+                :class="{ 'rotate-180': showPast }"
+                aria-hidden="true"
+              />
+              {{ showPast ? "Hide" : "Show" }} {{ day.pastCount }} past
+              {{ day.pastCount === 1 ? "favorite" : "favorites" }}
+            </button>
+          </li>
           <li
-            v-for="{ event, gap, walk } in day.events"
+            v-for="{ event, past, gap, walk } in day.events"
             :key="event.id"
             class="relative border-b border-line"
+            :class="{ 'opacity-60': past }"
           >
             <!-- On the line above, below the previous favorite's end time. Red when there's no
                  time to get there. -->
