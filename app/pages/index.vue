@@ -29,16 +29,28 @@ const selectedVenue = computed<string>({
   },
 });
 
+// Only the events in this device's favorites list, kept in the URL as `?favorites`.
+const onlyFavorites = computed<boolean>({
+  get: () => route.query.favorites !== undefined,
+  set(only) {
+    const { favorites: _, ...query } = route.query;
+    router.replace({ query: only ? { ...query, favorites: null } : query });
+  },
+});
+
 const search = useSearchQuery("timetable_searched", () => matches.value.length);
 const searchOpen = ref(search.value !== "");
 const searchText = useSearchText(search);
 
-// Events at the selected venue that match the search, on any day.
+const { listId: favoritesListId, events: favoriteEvents, isFavorite } = useFavorites();
+
+// Events at the selected venue that match the search and the favorites filter, on any day.
 const matches = computed(
   () =>
     data.value?.events.filter(
       (event) =>
         (selectedVenue.value === "all" || findVenue(event.venue)?.key === selectedVenue.value) &&
+        (!onlyFavorites.value || isFavorite(event.id)) &&
         matchesSearch(
           search.value,
           event.title,
@@ -71,6 +83,7 @@ const emptyMessage = computed(() => {
   return [
     "Nothing",
     q && `matching “${q}”`,
+    onlyFavorites.value && "in your favorites",
     selectedBuilding.value && `at ${selectedBuilding.value}`,
     `on ${formatDay(selectedDay.value!, { weekday: "long", day: "numeric", month: "long" })}.`,
   ]
@@ -78,7 +91,6 @@ const emptyMessage = computed(() => {
     .join(" ");
 });
 
-const { listId: favoritesListId, events: favoriteEvents } = useFavorites();
 const online = useOnline();
 
 // Restore the scroll position when coming back from an event page.
@@ -90,7 +102,9 @@ const savedScroll = useState<{ key: string; top: number; left: number } | null>(
   "timetable-scroll",
   () => null,
 );
-const scrollKey = computed(() => `${selectedDay.value}|${selectedVenue.value}|${search.value}`);
+const scrollKey = computed(
+  () => `${selectedDay.value}|${selectedVenue.value}|${onlyFavorites.value}|${search.value}`,
+);
 onBeforeUnmount(() => {
   if (!scroller.value) return;
   const { scrollTop: top, scrollLeft: left } = scroller.value;
@@ -182,7 +196,6 @@ useHead({
             :to="{ query: { ...route.query, day } }"
             replace
             :aria-current="day === selectedDay ? 'date' : undefined"
-            :class="{ 'max-sm:w-10': searchOpen }"
             class="flex w-14 shrink-0 flex-col items-center bevel-corner border border-line py-1.5 transition-colors hover:border-ink aria-[current]:clip-corner aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-paper"
           >
             <span class="text-[11px] uppercase">{{ formatDay(day, { weekday: "short" }) }}</span>
@@ -191,16 +204,40 @@ useHead({
             </span>
           </NuxtLink>
         </nav>
-        <div class="flex min-w-0 flex-1 justify-end gap-2">
-          <!-- On phones it takes the place of the venue select, which keeps filtering, and the days
-          get narrower. -->
+        <!-- On phones the search, venue and favorites filters are in a popover. -->
+        <div class="flex min-w-0 flex-1 justify-end gap-2 sm:hidden">
+          <TimetableFilters
+            v-model:search="search"
+            v-model:venue="selectedVenue"
+            v-model:only-favorites="onlyFavorites"
+            :venues="venues"
+          />
+        </div>
+        <div class="flex min-w-0 flex-1 justify-end gap-2 max-sm:hidden">
           <SearchToggle
             v-model="search"
             v-model:open="searchOpen"
             placeholder="Title, speaker, tag"
           />
-          <!-- Narrower than its longest venue name on small phones, which then gets cut off. -->
-          <label class="relative min-w-0" :class="{ 'max-sm:hidden': searchOpen }">
+          <button
+            type="button"
+            :aria-pressed="onlyFavorites"
+            class="inline-flex shrink-0 items-center bevel-corner border p-2 transition-colors"
+            :class="
+              onlyFavorites
+                ? 'clip-corner border-ink bg-ink text-paper hover:bg-ink-soft'
+                : 'border-line hover:border-ink'
+            "
+            @click="onlyFavorites = !onlyFavorites"
+          >
+            <Icon
+              :name="onlyFavorites ? 'material-symbols:star' : 'material-symbols:star-outline'"
+              class="size-4"
+              aria-hidden="true"
+            />
+            <span class="sr-only">Only favorites</span>
+          </button>
+          <label class="relative min-w-0">
             <span class="sr-only">Venue</span>
             <select
               v-model="selectedVenue"
@@ -236,8 +273,11 @@ useHead({
       </p>
       <div v-else-if="selectedDay && timetable.venues.length === 0" class="p-4 text-ink-muted">
         <p>{{ emptyMessage }}</p>
-        <p v-if="search.trim() && otherMatchingDays.length" class="mt-2 flex flex-wrap gap-x-3">
-          <span>Results on other days:</span>
+        <p
+          v-if="(search.trim() || onlyFavorites) && otherMatchingDays.length"
+          class="mt-2 flex flex-wrap gap-x-3"
+        >
+          <span>{{ search.trim() ? "Results" : "Favorites" }} on other days:</span>
           <NuxtLink
             v-for="day in otherMatchingDays"
             :key="day"
