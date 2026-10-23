@@ -1,6 +1,16 @@
 export type TimetableEvent = Pick<
   FestivalEvent,
-  "id" | "kind" | "slug" | "title" | "date" | "start" | "end" | "startsAt" | "venue" | "image"
+  | "id"
+  | "kind"
+  | "slug"
+  | "title"
+  | "date"
+  | "start"
+  | "end"
+  | "startsAt"
+  | "endsAt"
+  | "venue"
+  | "image"
 > & {
   /** Speaker names for the card, null when there are none or they're the title. */
   speakers: string | null;
@@ -147,6 +157,13 @@ export function minutesBetween(
   // Runs past midnight.
   if (end <= toMinutes(previous.start)) end += 24 * 60;
   return toMinutes(next.start) - end;
+}
+
+/** Whether the event is over at `now` (ms). Without an end, it takes `DEFAULT_DURATION`. */
+export function hasEnded(event: Pick<TimetableEvent, "startsAt" | "endsAt">, now: number): boolean {
+  if (event.endsAt) return Date.parse(event.endsAt) <= now;
+  if (event.startsAt) return Date.parse(event.startsAt) + DEFAULT_DURATION * 60_000 <= now;
+  return false;
 }
 
 /** `75` → `"1 h 15 min"`. */
