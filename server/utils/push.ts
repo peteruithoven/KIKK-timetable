@@ -161,13 +161,13 @@ export async function sendDueNotifications(now = Date.now()): Promise<void> {
           });
           sent.push(`${event.id}@${event.startsAt}`);
         } catch (error) {
-          const status = (error as { statusCode?: number }).statusCode;
+          const { statusCode: status, body } = error as { statusCode?: number; body?: string };
           if (status === 404 || status === 410) {
             // Unsubscribed, or the browser's data was cleared.
             gone = true;
             break;
           }
-          console.warn("[push] sending failed:", status ?? error);
+          console.warn("[push] sending failed:", status ?? error, body ?? "");
         }
       }
       if (gone) await storage().removeItem(key);

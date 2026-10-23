@@ -34,7 +34,12 @@ function isIos(): boolean {
 }
 
 async function registration(): Promise<ServiceWorkerRegistration | undefined> {
-  return "serviceWorker" in navigator ? navigator.serviceWorker.getRegistration() : undefined;
+  if (!("serviceWorker" in navigator)) return undefined;
+  const existing = await navigator.serviceWorker.getRegistration();
+  // On first launch, e.g. of an app just added to the iOS home screen (it doesn't share Safari's
+  // worker), the worker registers after the page loads. It never does in development.
+  if (existing || import.meta.dev) return existing;
+  return navigator.serviceWorker.ready;
 }
 
 function urlBase64ToUint8Array(value: string): Uint8Array<ArrayBuffer> {
@@ -75,13 +80,15 @@ export function usePushNotifications() {
 
   /** Asks for permission and subscribes. False when permission wasn't given, throws on failure. */
   async function enable(): Promise<boolean> {
-    // Saves the list first if this device has none yet.
-    await favorites.flush();
-    if (!favorites.listId.value) throw new Error("No favorites list");
+    // Must come before anything is awaited: Safari only asks while handling the tap, otherwise
+    // it silently denies.
     if ((await Notification.requestPermission()) !== "granted") {
       await check();
       return false;
     }
+    // Saves the list first if this device has none yet.
+    await favorites.flush();
+    if (!favorites.listId.value) throw new Error("No favorites list");
     const worker = await navigator.serviceWorker.ready;
     const { publicKey } = await $fetch<{ publicKey: string }>("/api/push/key");
     const options = {
