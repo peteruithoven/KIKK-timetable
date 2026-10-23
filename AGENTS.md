@@ -84,6 +84,7 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - Lists have an optional `label` (PATCH `{ label }`, empty removes it). It's shared like the favorites, and shown instead of the id, which stays the link. Labels can be personal: give elements that show one the `ph-sensitive` class (PostHog autocapture skips their text) and keep them out of page titles.
 - A list's `events` holds both event and installation ids (`installation:uuid`); the name predates installations.
 - Stored lists keep a `paths` map (event id to `kind/slug`, installation id to `trail/slug`) so favorites follow events Kikk re-creates under a new id. It's internal, the API doesn't return it.
+- The list page hides favorites that are over (`hasEnded()`: `endsAt`, or an hour after the start), with a "Show N past favorites" row per day that shows them dimmed. The time comes from the server render (`useState`), so hydration hides the same ones.
 - `/api/lists/<id>/calendar.ics` is a subscribable calendar (`server/utils/ical.ts`).
 
 ## Notifications
