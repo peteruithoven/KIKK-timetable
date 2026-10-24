@@ -36,6 +36,23 @@ const trailPath = computed(() => {
   return key && hasInstallations ? `/trail#${key}` : null;
 });
 
+// Art trail works per venue, shown in the pins with `?trail`.
+const trailCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  for (const installation of trail.value?.installations ?? []) {
+    const key = findVenue(installation.venue)?.key;
+    if (key) counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+});
+const hasTrailCounts = computed(() => Object.keys(trailCounts.value).length > 0);
+const showTrail = computed(() => route.query.trail !== undefined);
+
+function toggleTrail() {
+  const { trail: _, ...query } = route.query;
+  router.replace({ query: showTrail.value ? query : { ...query, trail: null } });
+}
+
 function selectVenue(key: string | null) {
   // Replace, so Back still goes back to where the map was opened from.
   const { venue: _, ...query } = route.query;
@@ -69,9 +86,14 @@ onMounted(async () => {
   instance.keyboard.disableRotation();
   instance.setStyle("https://tiles.openfreemap.org/styles/dark", {
     // Runs when the style has been fetched, so it picks up a highlight changed in the meantime.
-    transformStyle: (_, style) => withVenueLayers(withStyleTweaks(style), highlightedVenue.value),
+    transformStyle: (_, style) =>
+      withVenueLayers(withStyleTweaks(style), {
+        highlighted: highlightedVenue.value,
+        trailCounts: trailCounts.value,
+        showTrail: showTrail.value,
+      }),
   });
-  addPinImage(instance);
+  addPinImages(instance);
   instance.once("style.load", () => {
     onVenueClick(instance, selectVenue);
     styleLoaded = true;
@@ -82,6 +104,10 @@ onMounted(async () => {
 
 watch(highlightedVenue, (key) => {
   if (map && styleLoaded) highlightVenue(map, key);
+});
+
+watch(showTrail, (show) => {
+  if (map && styleLoaded) showTrailCounts(map, show);
 });
 
 onBeforeUnmount(() => map?.remove());
@@ -116,6 +142,7 @@ useSeoMeta({ title: "Map · KIKK 2026" });
       <div class="absolute top-2.5 right-2.5 flex flex-col gap-2.5">
         <MapZoomControl @zoom-in="map?.zoomIn()" @zoom-out="map?.zoomOut()" />
         <MapLocateControl v-if="canLocate" :state="locateState" @locate="locate" />
+        <MapTrailControl v-if="hasTrailCounts" :pressed="showTrail" @toggle="toggleTrail" />
       </div>
     </div>
     <MapVenueBar
