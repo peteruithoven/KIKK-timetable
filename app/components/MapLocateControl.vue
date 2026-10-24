@@ -6,7 +6,8 @@ defineEmits<{ locate: [] }>();
 
 const BUTTONS: Record<LocateState, { label: string; icon: string }> = {
   off: { label: "Show my location", icon: "material-symbols:location-searching" },
-  waiting: { label: "Finding your location…", icon: "material-symbols:location-searching" },
+  // Rotates slowly, like a loading indicator.
+  waiting: { label: "Finding your location…", icon: "material-symbols:radar" },
   // Following the location: clicking turns it off.
   active: { label: "Hide my location", icon: "material-symbols:my-location" },
   // Location shown, but the map was moved away from it.
@@ -31,7 +32,7 @@ const button = computed(() => BUTTONS[props.state]);
     <Icon
       :name="button.icon"
       class="size-5"
-      :class="{ 'animate-pulse': state === 'waiting' }"
+      :class="{ 'motion-safe:animate-[spin_2s_linear_infinite]': state === 'waiting' }"
       aria-hidden="true"
     />
   </button>
