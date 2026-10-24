@@ -16,16 +16,14 @@ const PIN_SIZE = 12;
 const PIN_CORNER = 4;
 const PIN_PIXEL_RATIO = 2;
 
-/** Global state, whether the art trail badges are shown. */
+/** Global state, whether the pins show their number of art trail works. */
 const SHOW_TRAIL_STATE = "showTrail";
 
-const BADGE_IMAGE = "trail-badge";
-const BADGE_SIZE = 16;
-const BADGE_CORNER = 4;
-/** Badge center from the pin center, towards the top right, overlapping the pin's corner. */
-const BADGE_OFFSET = 9;
-const BADGE_TEXT_SIZE = 10;
-const BADGE_LAYER = "venue-trail-badges";
+/** A larger pin, to fit the number. Still clear of the labels' `text-radial-offset`. */
+const COUNT_PIN_IMAGE = "count-pin";
+const COUNT_PIN_SIZE = 16;
+const COUNT_PIN_TEXT_SIZE = 10;
+const COUNT_LAYER = "venue-trail-counts";
 
 /**
  * One layer per venue, so the highlighted one can be moved to the top, where its label is placed
@@ -87,7 +85,7 @@ export function withVenueLayers(
     layers: [
       ...style.layers,
       ...venues.map((venue) => venueLayerSpecification(venue.key)),
-      badgeLayerSpecification(),
+      countLayerSpecification(),
     ],
   };
 }
@@ -105,6 +103,13 @@ function highlightOpacity(key: ExpressionSpecification | string): ExpressionSpec
     1,
   ];
 }
+
+/** Whether a venue's pin is replaced by one with its number of art trail works. */
+const SHOWS_COUNT: ExpressionSpecification = [
+  "all",
+  ["to-boolean", ["global-state", SHOW_TRAIL_STATE]],
+  [">", ["get", "trailCount"], 0],
+];
 
 function venueLayerSpecification(key: string): SymbolLayerSpecification {
   const opacity = highlightOpacity(key);
@@ -133,37 +138,31 @@ function venueLayerSpecification(key: string): SymbolLayerSpecification {
       "text-color": "#ffffff",
       "text-halo-color": "#121212",
       "text-halo-width": 1.5,
-      "icon-opacity": opacity,
+      // Hidden under the pin with the number.
+      "icon-opacity": ["case", SHOWS_COUNT, 0, opacity],
       "text-opacity": opacity,
     },
   };
 }
 
 /**
- * The number of art trail works on the top right corner of the pins. Above the venue layers, so
- * it's placed first and labels make room for it. A filter rather than an opacity, so hidden
- * badges don't push labels away.
+ * Pins with the number of art trail works in them, drawn over the venue pins. Their own layer,
+ * since changing the venue layers' `icon-image` would lay out the symbols again, which fades them
+ * all out and in.
  */
-function badgeLayerSpecification(): SymbolLayerSpecification {
+function countLayerSpecification(): SymbolLayerSpecification {
   const opacity = highlightOpacity(["get", "key"]);
   return {
-    id: BADGE_LAYER,
+    id: COUNT_LAYER,
     type: "symbol",
     source: "venues",
-    filter: [
-      "all",
-      ["to-boolean", ["global-state", SHOW_TRAIL_STATE]],
-      [">", ["get", "trailCount"], 0],
-    ],
+    filter: SHOWS_COUNT,
     layout: {
-      "icon-image": BADGE_IMAGE,
-      "icon-offset": [BADGE_OFFSET, -BADGE_OFFSET],
+      "icon-image": COUNT_PIN_IMAGE,
       "icon-allow-overlap": true,
       "text-field": ["to-string", ["get", "trailCount"]],
       "text-font": ["Noto Sans Bold"],
-      "text-size": BADGE_TEXT_SIZE,
-      // In ems.
-      "text-offset": [BADGE_OFFSET / BADGE_TEXT_SIZE, -BADGE_OFFSET / BADGE_TEXT_SIZE],
+      "text-size": COUNT_PIN_TEXT_SIZE,
       "text-allow-overlap": true,
     },
     paint: {
@@ -174,8 +173,8 @@ function badgeLayerSpecification(): SymbolLayerSpecification {
   };
 }
 
-/** Shows or hides the art trail badges. Call once the style has loaded. */
-export function showTrailBadges(map: MapLibreMap, show: boolean) {
+/** Shows or hides the numbers of art trail works in the pins. Call once the style has loaded. */
+export function showTrailCounts(map: MapLibreMap, show: boolean) {
   map.setGlobalStateProperty(SHOW_TRAIL_STATE, show);
 }
 
@@ -187,50 +186,33 @@ export function highlightVenue(map: MapLibreMap, key: string | null) {
   // Not null, that would reset it to the initial highlight.
   map.setGlobalStateProperty(HIGHLIGHTED_STATE, key ?? "");
   if (key && map.getLayer(venueLayer(key))) map.moveLayer(venueLayer(key));
-  // The badges stay on top.
-  if (map.getLayer(BADGE_LAYER)) map.moveLayer(BADGE_LAYER);
+  // The pins with numbers stay on top of the pins they cover.
+  if (map.getLayer(COUNT_LAYER)) map.moveLayer(COUNT_LAYER);
 }
 
 /**
- * The pin and the badge background: white squares with the cut top right corner of the Kikk
- * style, the badge with a dark border to set it off from the pin. Can be added before the style
- * loads.
+ * White squares with the cut top right corner of the Kikk style, the pin and the larger one for
+ * numbers. Can be added before the style loads.
  */
 export function addPinImages(map: MapLibreMap) {
-  if (!map.hasImage(PIN_IMAGE)) map.addImage(PIN_IMAGE, ...cornerSquare(PIN_SIZE, PIN_CORNER));
-  if (!map.hasImage(BADGE_IMAGE)) {
-    map.addImage(BADGE_IMAGE, ...cornerSquare(BADGE_SIZE, BADGE_CORNER, 1.5));
+  if (!map.hasImage(PIN_IMAGE)) map.addImage(PIN_IMAGE, ...cornerSquare(PIN_SIZE));
+  if (!map.hasImage(COUNT_PIN_IMAGE)) {
+    map.addImage(COUNT_PIN_IMAGE, ...cornerSquare(COUNT_PIN_SIZE));
   }
 }
 
-function cornerSquare(
-  size: number,
-  corner: number,
-  border = 0,
-): [ImageData, { pixelRatio: number }] {
-  const [s, c, b] = [size, corner, border].map((value) => value * PIN_PIXEL_RATIO) as [
-    number,
-    number,
-    number,
-  ];
+function cornerSquare(size: number): [ImageData, { pixelRatio: number }] {
+  const s = size * PIN_PIXEL_RATIO;
+  const corner = PIN_CORNER * PIN_PIXEL_RATIO;
   const context = document.createElement("canvas").getContext("2d")!;
-  const path = (inset: number) => {
-    // The diagonal moves in further than the straight sides.
-    const diagonal = inset * (Math.SQRT2 - 1);
-    context.beginPath();
-    context.moveTo(inset, inset);
-    context.lineTo(s - c - diagonal, inset);
-    context.lineTo(s - inset, c + diagonal);
-    context.lineTo(s - inset, s - inset);
-    context.lineTo(inset, s - inset);
-    context.fill();
-  };
-  if (b) {
-    context.fillStyle = "#121212";
-    path(0);
-  }
   context.fillStyle = "#ffffff";
-  path(b);
+  context.beginPath();
+  context.moveTo(0, 0);
+  context.lineTo(s - corner, 0);
+  context.lineTo(s, corner);
+  context.lineTo(s, s);
+  context.lineTo(0, s);
+  context.fill();
   return [context.getImageData(0, 0, s, s), { pixelRatio: PIN_PIXEL_RATIO }];
 }
 
@@ -245,7 +227,7 @@ export function onVenueClick(map: MapLibreMap, onClick: (key: string | null) => 
         [point.x - CLICK_MARGIN, point.y - CLICK_MARGIN],
         [point.x + CLICK_MARGIN, point.y + CLICK_MARGIN],
       ],
-      { layers: [...VENUE_LAYERS, BADGE_LAYER] },
+      { layers: [...VENUE_LAYERS, COUNT_LAYER] },
     );
     onClick(feature?.properties.key ?? null);
   });

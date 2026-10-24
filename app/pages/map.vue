@@ -36,7 +36,7 @@ const trailPath = computed(() => {
   return key && hasInstallations ? `/trail#${key}` : null;
 });
 
-// Art trail works per venue, shown as badges on the pins with `?trail`.
+// Art trail works per venue, shown in the pins with `?trail`.
 const trailCounts = computed(() => {
   const counts: Record<string, number> = {};
   for (const installation of trail.value?.installations ?? []) {
@@ -107,7 +107,7 @@ watch(highlightedVenue, (key) => {
 });
 
 watch(showTrail, (show) => {
-  if (map && styleLoaded) showTrailBadges(map, show);
+  if (map && styleLoaded) showTrailCounts(map, show);
 });
 
 onBeforeUnmount(() => map?.remove());
