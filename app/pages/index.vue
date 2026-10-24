@@ -24,6 +24,7 @@ const selectedVenue = computed<string>({
     return venues.value.find((venue) => venue.key === requested)?.key ?? "all";
   },
   set(venue) {
+    rememberFilters({ venue });
     const { venue: _, ...query } = route.query;
     router.replace({ query: venue === "all" ? query : { ...query, venue } });
   },
@@ -33,6 +34,7 @@ const selectedVenue = computed<string>({
 const onlyFavorites = computed<boolean>({
   get: () => route.query.favorites !== undefined,
   set(only) {
+    rememberFilters({ favorites: only });
     const { favorites: _, ...query } = route.query;
     router.replace({ query: only ? { ...query, favorites: null } : query });
   },

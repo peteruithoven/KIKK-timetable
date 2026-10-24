@@ -49,6 +49,7 @@ const hasTrailCounts = computed(() => Object.keys(trailCounts.value).length > 0)
 const showTrail = computed(() => route.query.trail !== undefined);
 
 function toggleTrail() {
+  rememberFilters({ trail: !showTrail.value });
   const { trail: _, ...query } = route.query;
   router.replace({ query: showTrail.value ? query : { ...query, trail: null } });
 }
