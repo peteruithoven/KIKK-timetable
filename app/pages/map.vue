@@ -136,7 +136,7 @@ useSeoMeta({ title: "Map · KIKK 2026" });
       </a>
       <h1 class="font-display text-xs font-bold tracking-[0.12em] uppercase">Map</h1>
     </nav>
-    <div class="relative min-h-0 flex-1">
+    <div class="relative min-h-0 flex-1 [--focus-ring:var(--color-paper)]">
       <!-- The map is dark in both modes. -->
       <div ref="container" class="map palette-light size-full bg-ink" />
       <!-- Where MapLibre puts its controls, as far apart as its own. -->

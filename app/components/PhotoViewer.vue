@@ -244,6 +244,9 @@ const resizeObserver = import.meta.client
 onMounted(() => {
   const element = dialog.value!;
   element.showModal();
+  // Rather than the Back button, which would show its focus ring. Chrome ignores `autofocus` on
+  // the dialog itself.
+  element.focus();
   resizeObserver?.observe(scroller.value!);
   // Loaded before hydration.
   if (image.value?.complete) onLoad();
@@ -270,8 +273,9 @@ useHead({ htmlAttrs: { class: "overflow-hidden" } });
   <!-- Escape and Android's back gesture close the dialog itself, `close` passes that on. -->
   <dialog
     ref="dialog"
+    tabindex="-1"
     :aria-label="label"
-    class="palette-light m-0 h-dvh max-h-none w-full max-w-none touch-pan-x touch-pan-y flex-col overflow-hidden bg-ink p-0 text-paper backdrop:bg-ink open:flex"
+    class="palette-light m-0 h-dvh max-h-none w-full max-w-none touch-pan-x touch-pan-y flex-col overflow-hidden bg-ink p-0 text-paper [--focus-ring:var(--color-paper)] backdrop:bg-ink open:flex"
     @close="emit('close')"
   >
     <nav

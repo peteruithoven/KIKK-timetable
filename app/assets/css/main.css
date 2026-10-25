@@ -51,6 +51,19 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  /*
+   * Instead of the browser's blue focus ring. Parts that are dark in both modes, like the photo
+   * viewer and the map, set --focus-ring to paper.
+   */
+  :focus-visible {
+    outline: 1px solid var(--focus-ring, var(--color-ink));
+    outline-offset: 2px;
+  }
+  /* PhotoViewer focuses its dialog when it opens. */
+  dialog:focus-visible {
+    outline: none;
+  }
 }
 
 /*
