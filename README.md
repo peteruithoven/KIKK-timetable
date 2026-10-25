@@ -6,10 +6,10 @@ An unofficial timetable for [KIKK Festival](https://www.kikkfestival.be) 2026, t
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/timetable.webp" alt="The timetable for Friday, with venues as columns and favorites highlighted" width="200"></td>
-    <td><img src="docs/screenshots/filters.webp" alt="The timetable's filter menu with search, venue and only favorites" width="200"></td>
-    <td><img src="docs/screenshots/event.webp" alt="A talk's page with its tags, time, venue and description" width="200"></td>
-    <td><img src="docs/screenshots/photo.webp" alt="A photo from a talk's gallery opened full screen" width="200"></td>
+    <td width="25%"><img src="docs/screenshots/timetable.webp" alt="The timetable for Friday, with venues as columns and favorites highlighted" width="100%"></td>
+    <td width="25%"><img src="docs/screenshots/filters.webp" alt="The timetable's filter menu with search, venue and only favorites" width="100%"></td>
+    <td width="25%"><img src="docs/screenshots/event.webp" alt="A talk's page with its tags, time, venue and description" width="100%"></td>
+    <td width="25%"><img src="docs/screenshots/photo.webp" alt="A photo from a talk's gallery opened full screen" width="100%"></td>
   </tr>
   <tr>
     <td align="center">Timetable</td>
@@ -18,10 +18,10 @@ An unofficial timetable for [KIKK Festival](https://www.kikkfestival.be) 2026, t
     <td align="center">Photo viewer</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/favorites.webp" alt="A favorites list with the breaks and walking times between talks" width="200"></td>
-    <td><img src="docs/screenshots/trail.webp" alt="The art trail overview, grouped by place" width="200"></td>
-    <td><img src="docs/screenshots/work-dark.webp" alt="An art trail installation's page in dark mode" width="200"></td>
-    <td><img src="docs/screenshots/map.webp" alt="The map of Namur with your location, the venues and the number of artworks at each place" width="200"></td>
+    <td width="25%"><img src="docs/screenshots/favorites.webp" alt="A favorites list with the breaks and walking times between talks" width="100%"></td>
+    <td width="25%"><img src="docs/screenshots/trail.webp" alt="The art trail overview, grouped by place" width="100%"></td>
+    <td width="25%"><img src="docs/screenshots/work-dark.webp" alt="An art trail installation's page in dark mode" width="100%"></td>
+    <td width="25%"><img src="docs/screenshots/map.webp" alt="The map of Namur with your location, the venues and the number of artworks at each place" width="100%"></td>
   </tr>
   <tr>
     <td align="center">Favorites</td>
@@ -30,7 +30,7 @@ An unofficial timetable for [KIKK Festival](https://www.kikkfestival.be) 2026, t
     <td align="center">Map</td>
   </tr>
   <tr>
-    <td colspan="4"><img src="docs/screenshots/timetable-desktop.webp" alt="The timetable on a desktop screen in dark mode, with all venues of Friday side by side"></td>
+    <td colspan="4"><img src="docs/screenshots/timetable-desktop.webp" alt="The timetable on a desktop screen in dark mode, with all venues of Friday side by side" width="100%"></td>
   </tr>
   <tr>
     <td colspan="4" align="center">Timetable on desktop (dark mode)</td>
