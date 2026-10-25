@@ -134,7 +134,8 @@ Unofficial KIKK Festival 2026 timetable (Namur, 22–24 Oct). Styled after kikkf
 - The formatter rewrites unicode escapes of invisible characters (like the non-breaking space) into the literal character, also in Markdown. In regexes use `\p{Zs}` with the `u` flag.
 - The user usually runs the dev server on port 3000. Editing `nuxt.config.ts` restarts it. `vp run build` writes the `.nuxt` folder it uses, so test production builds with Docker instead: `docker build -t kikk-timetable:test .` and `docker run --env-file .env -p 3125:3000 kikk-timetable:test`.
 - Claude Code cloud sessions (claude.ai/code, the Claude app) install dependencies with a SessionStart hook (`.claude/settings.json` runs `scripts/cloud-setup.sh`, which does nothing locally). They use the project's own `vp` from `node_modules/.bin`, have no Supabase credentials (the server serves the committed snapshots) and can't reach Supabase or OpenFreeMap.
-- Browser testing: Chrome is at `/usr/bin/google-chrome`; drive it with `puppeteer-core` installed outside the project. PostHog treats a browser with `navigator.webdriver` set as a bot and sends nothing; launch Chrome with `--disable-blink-features=AutomationControlled` to test analytics.
+- Browser testing: Chrome is at `/usr/bin/google-chrome`; drive it with `puppeteer-core` (a dev dependency).
+- The README's screenshots come from `vp run screenshots [name…]` (`scripts/screenshots.ts`), with the dev server on port 3000 (`BASE_URL` to change). It creates a favorites list on that server each run, fakes the browser's clock (Friday morning of the festival) and location, and hides the Nuxt devtools button. Favorites are listed by page path, so they survive Kikk re-creating events. PostHog treats a browser with `navigator.webdriver` set as a bot and sends nothing; launch Chrome with `--disable-blink-features=AutomationControlled` to test analytics.
 
 ## Deployment
 

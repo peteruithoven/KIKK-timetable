@@ -13,6 +13,7 @@
     "prepare": "vp config",
     "snapshot": "node --env-file-if-exists=.env scripts/update-snapshot.ts",
     "og-image": "google-chrome --headless --hide-scrollbars --window-size=1200,630 --virtual-time-budget=5000 --screenshot=public/og-image.png http://localhost:3000/og-image",
+    "screenshots": "node scripts/screenshots.ts",
     "server:deploy": "ssh kikk@brezel '~/KIKK-timetable/deploy/deploy.sh --force'",
     "server:backup": "mkdir -p backups && ssh kikk@brezel 'docker cp kikk-timetable:/app/.data - | gzip' > backups/kikk-data-$(date +%Y-%m-%d-%H%M).tar.gz"
   },
@@ -37,6 +38,7 @@
     "@types/sanitize-html": "^2.16.2",
     "@types/web-push": "^3.6.4",
     "@vite-pwa/nuxt": "^1.1.1",
+    "puppeteer-core": "^25.16.0",
     "typescript": "~6.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:",
