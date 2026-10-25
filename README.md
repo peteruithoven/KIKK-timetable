@@ -29,6 +29,12 @@ An unofficial timetable for [KIKK Festival](https://www.kikkfestival.be) 2026, t
     <td align="center">Installation (dark mode)</td>
     <td align="center">Map</td>
   </tr>
+  <tr>
+    <td colspan="4"><img src="docs/screenshots/timetable-desktop.webp" alt="The timetable on a desktop screen in dark mode, with all venues of Friday side by side"></td>
+  </tr>
+  <tr>
+    <td colspan="4" align="center">Timetable on desktop (dark mode)</td>
+  </tr>
 </table>
 
 ## Why

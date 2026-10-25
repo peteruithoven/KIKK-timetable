@@ -1,4 +1,4 @@
-// Takes the phone screenshots in the README from a running dev server and saves them as WebP in
+// Takes the screenshots in the README from a running dev server and saves them as WebP in
 // docs/screenshots/. Pass names to retake only those: `vp run screenshots map favorites`.
 // Each run creates a new favorites list on the server.
 import { launch, type Page } from "puppeteer-core";
@@ -32,6 +32,8 @@ interface Shot {
   name: string;
   path: string | ((listId: string) => string);
   dark?: boolean;
+  /** A desktop browser window instead of a phone. */
+  desktop?: boolean;
   /** Runs after the page has loaded and settled. */
   prepare?: (page: Page) => Promise<void>;
 }
@@ -61,7 +63,19 @@ const SHOTS: Shot[] = [
       await settle(4000);
     },
   },
+  { name: "timetable-desktop", path: "/?day=2026-10-23", dark: true, desktop: true },
 ];
+
+const PHONE = {
+  viewport: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  userAgent:
+    "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36",
+};
+const DESKTOP = {
+  viewport: { width: 1440, height: 900, deviceScaleFactor: 2 },
+  userAgent:
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+};
 
 function settle(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -119,17 +133,6 @@ try {
   const context = await browser.createBrowserContext();
   await context.overridePermissions(BASE_URL, ["geolocation"]);
   const page = await context.newPage();
-  await page.setViewport({
-    width: 390,
-    height: 844,
-    deviceScaleFactor: 2,
-    isMobile: true,
-    hasTouch: true,
-  });
-  await page.setUserAgent({
-    userAgent:
-      "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36",
-  });
   await page.emulateTimezone("Europe/Brussels");
   await page.setGeolocation(LOCATION);
   await page.setCookie({ name: "kikk-list", value: listId, url: BASE_URL });
@@ -152,6 +155,9 @@ try {
   }, Date.parse(NOW));
 
   for (const shot of shots) {
+    const device = shot.desktop ? DESKTOP : PHONE;
+    await page.setViewport(device.viewport);
+    await page.setUserAgent({ userAgent: device.userAgent });
     await page.emulateMediaFeatures([
       { name: "prefers-color-scheme", value: shot.dark ? "dark" : "light" },
     ]);
