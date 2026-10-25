@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const qrCode = computed(() => renderSVG(props.url, { blackColor: "#121212", border: 2 }));
 
-// Full screen, so it's easy to scan from someone else's phone.
+// Full screen, so it's easy to scan from someone else's phone. White in dark mode too.
 const dialog = useTemplateRef("dialog");
 </script>
 
@@ -27,7 +27,7 @@ const dialog = useTemplateRef("dialog");
     <dialog
       ref="dialog"
       aria-label="QR code"
-      class="m-0 h-dvh max-h-none w-full max-w-none bg-paper p-6 text-ink"
+      class="palette-light m-0 h-dvh max-h-none w-full max-w-none bg-paper p-6 text-ink"
       @click="dialog?.close()"
     >
       <div class="flex h-full flex-col items-center justify-center gap-6">
@@ -39,7 +39,7 @@ const dialog = useTemplateRef("dialog");
         <p class="font-display text-sm font-semibold tracking-[0.12em] uppercase">
           {{ label }}
         </p>
-        <p class="text-sm text-neutral-500">Tap to close</p>
+        <p class="text-sm text-ink-muted">Tap to close</p>
       </div>
     </dialog>
   </div>

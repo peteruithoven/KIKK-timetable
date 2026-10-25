@@ -65,9 +65,11 @@ export default defineNuxtConfig({
       ],
       meta: [
         { name: "apple-mobile-web-app-title", content: "Timetable" },
-        { name: "theme-color", content: "#ffffff" },
-        // Light only, also for the browser UI (like Android's navigation bar).
-        { name: "color-scheme", content: "light" },
+        // The --color-paper of each mode, see main.css.
+        { name: "theme-color", content: "#ffffff", media: "(prefers-color-scheme: light)" },
+        { name: "theme-color", content: "#121212", media: "(prefers-color-scheme: dark)" },
+        // Also for the browser UI, like scrollbars and Android's navigation bar.
+        { name: "color-scheme", content: "light dark" },
       ],
     },
   },

@@ -49,7 +49,7 @@ const titleStyle = computed(() => {
     class="group absolute flex flex-col overflow-hidden border transition-colors focus-visible:outline-none"
     :class="
       favorite
-        ? 'clip-corner border-ink bg-ink text-paper hover:border-neutral-700 hover:bg-neutral-700 focus-visible:border-neutral-700 focus-visible:bg-neutral-700'
+        ? 'clip-corner border-ink bg-ink text-paper hover:border-ink-soft hover:bg-ink-soft focus-visible:border-ink-soft focus-visible:bg-ink-soft'
         : 'bevel-corner border-ink bg-paper hover:bg-ink hover:text-paper focus-visible:bg-ink focus-visible:text-paper'
     "
     :style="{ height: `${height}px` }"

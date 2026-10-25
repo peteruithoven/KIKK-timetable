@@ -20,6 +20,21 @@ const favoriteIds = computed(
   () => new Set(isOwn.value ? favorites.events.value : list.value?.events),
 );
 
+// From the server render, so hydration hides the same favorites, then kept up to date.
+const now = useState("list-now", () => Date.now());
+let timer: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  now.value = Date.now();
+  timer = setInterval(() => (now.value = Date.now()), 30_000);
+});
+onBeforeUnmount(() => clearInterval(timer));
+// Favorites that are over are hidden until someone asks for them.
+const showPast = useRememberedOpen("past", () => false);
+function togglePast() {
+  showPast.value = !showPast.value;
+  $posthog?.capture("past_favorites_toggled", { shown: showPast.value });
+}
+
 const days = computed(() => {
   const byDay = new Map<string, TimetableEvent[]>();
   for (const event of schedule.value?.events ?? []) {
@@ -34,10 +49,23 @@ const days = computed(() => {
         date,
         events: events.map((event, index) => ({
           event,
+          past: hasEnded(event, now.value),
           // Time since the previous favorite ended, negative when they overlap.
           gap: index ? minutesBetween(events[index - 1]!, event) : null,
           walk: index ? walkingMinutes(events[index - 1]!.venue, event.venue) : null,
         })),
+      };
+    })
+    .map((day) => {
+      const pastCount = day.events.filter((item) => item.past).length;
+      const events = showPast.value ? day.events : day.events.filter((item) => !item.past);
+      return {
+        ...day,
+        pastCount,
+        // No break shown to a favorite that's hidden.
+        events: events.map((item, index) =>
+          index || showPast.value || !pastCount ? item : { ...item, gap: null },
+        ),
       };
     });
 });
@@ -53,6 +81,11 @@ const shareUrl = `${origin}${listPath(id)}`;
 // Calendar apps subscribe to this and check it for changes regularly.
 const calendarUrl = `${origin}/api/lists/${id}/calendar.ics`;
 const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(calendarUrl.replace(/^https?:/, "webcal:"))}`;
+
+// This device remembers which sections were opened or closed.
+const shareOpen = useRememberedOpen("share", () => isEmpty.value);
+const calendarOpen = useRememberedOpen("calendar", () => false);
+const listsOpen = useRememberedOpen("lists", () => false);
 
 // Only this browser knows them, so they're loaded after hydration. Empty ones aren't worth
 // switching back to.
@@ -161,7 +194,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
     </nav>
 
     <main class="mx-auto max-w-3xl px-4 pt-6 pb-16">
-      <p class="font-display text-[11px] font-semibold tracking-[0.3em] text-neutral-500 uppercase">
+      <p class="font-display text-[11px] font-semibold tracking-[0.3em] text-ink-muted uppercase">
         Favorites
       </p>
       <form
@@ -182,7 +215,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           <button
             type="submit"
             :disabled="savingLabel"
-            class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700 disabled:opacity-60"
+            class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft disabled:opacity-60"
           >
             Save
           </button>
@@ -194,7 +227,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             Cancel
           </button>
         </div>
-        <p v-if="labelError" role="alert" class="basis-full text-sm text-neutral-700">
+        <p v-if="labelError" role="alert" class="basis-full text-sm text-ink-soft">
           The label couldn't be saved. Check your connection and try again.
         </p>
       </form>
@@ -216,11 +249,16 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             <Icon name="material-symbols:edit-outline" class="block size-5" aria-hidden="true" />
           </button>
         </div>
-        <p v-if="label" class="mt-1 text-sm text-neutral-500">{{ id }}</p>
+        <p v-if="label" class="mt-1 text-sm text-ink-muted">{{ id }}</p>
       </template>
 
       <!-- Collapsed, so returning visitors see their favorites right away. -->
-      <details v-if="isOwn" :open="isEmpty" class="group mt-6 border-y border-line">
+      <details
+        v-if="isOwn"
+        :open="shareOpen"
+        class="group mt-6 border-y border-line"
+        @toggle="shareOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -231,7 +269,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             aria-hidden="true"
           />
         </summary>
-        <p class="max-w-prose text-sm text-neutral-700">
+        <p class="max-w-prose text-sm text-ink-soft">
           This is your list. Open this link on another device to see and change the same favorites,
           or share it with friends to plan together. Anyone with the link can change the list.
         </p>
@@ -253,14 +291,14 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
       </details>
 
       <section v-else class="mt-6 border-y border-line py-5">
-        <p class="max-w-prose text-sm text-neutral-700">
+        <p class="max-w-prose text-sm text-ink-soft">
           Someone shared the following favorites with you.
         </p>
         <div class="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
             :disabled="adopting"
-            class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700 disabled:opacity-60"
+            class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft disabled:opacity-60"
             @click="favorites.events.value.length ? switchDialog?.showModal() : adopt()"
           >
             Switch to this list on this device
@@ -278,12 +316,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         <dialog
           ref="switchDialog"
           aria-labelledby="switch-dialog-title"
-          class="m-auto w-[calc(100%-2rem)] max-w-md border border-ink bg-paper p-6 text-ink backdrop:bg-ink/60"
+          class="m-auto w-[calc(100%-2rem)] max-w-md border border-ink bg-paper p-6 text-ink backdrop:bg-black/60"
         >
           <h2 id="switch-dialog-title" class="font-display text-lg font-bold">
             Switch to this list?
           </h2>
-          <p class="mt-2 text-sm text-neutral-700">
+          <p class="mt-2 text-sm text-ink-soft">
             Your timetable will show these favorites, and your changes show up for everyone who uses
             this list.
             <template v-if="favorites.listId.value">
@@ -306,7 +344,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             <button
               type="button"
               :disabled="adopting"
-              class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700 disabled:opacity-60"
+              class="clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft disabled:opacity-60"
               @click="adopt"
             >
               Switch
@@ -315,7 +353,13 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </dialog>
       </section>
 
-      <details class="group border-b border-line">
+      <NotificationsSection v-if="isOwn" />
+
+      <details
+        :open="calendarOpen"
+        class="group border-b border-line"
+        @toggle="calendarOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -326,7 +370,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             aria-hidden="true"
           />
         </summary>
-        <p class="max-w-prose text-sm text-neutral-700">
+        <p class="max-w-prose text-sm text-ink-soft">
           Subscribe to {{ isOwn ? "your" : "these" }} favorites in your calendar app. It stays up to
           date: new favorites and schedule changes show up by themselves. Calendar apps check for
           changes every few hours, Google Calendar can take up to a day.
@@ -334,7 +378,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             Art trail works aren't included, they have no set times.
           </template>
         </p>
-        <p class="mt-2 max-w-prose text-sm text-neutral-700">
+        <p class="mt-2 max-w-prose text-sm text-ink-soft">
           Or add them once with a calendar file. New favorites and schedule changes won't show up
           then.
         </p>
@@ -343,7 +387,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             :href="googleCalendarUrl"
             target="_blank"
             rel="noopener"
-            class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+            class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft"
             @click="startCalendarSubscription"
           >
             Google Calendar
@@ -367,7 +411,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </div>
       </details>
 
-      <details v-if="otherLists.length" class="group border-b border-line">
+      <details
+        v-if="otherLists.length"
+        :open="listsOpen"
+        class="group border-b border-line"
+        @toggle="listsOpen = detailsOpen($event)"
+      >
         <summary
           class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-lg font-bold [&::-webkit-details-marker]:hidden"
         >
@@ -392,12 +441,12 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
                 <span class="block font-display font-semibold wrap-break-word">
                   {{ other.label }}
                 </span>
-                <span class="block text-xs break-all text-neutral-500">{{ other.id }}</span>
+                <span class="block text-xs break-all text-ink-muted">{{ other.id }}</span>
               </span>
               <span v-else class="min-w-0 font-display font-semibold break-all">{{
                 other.id
               }}</span>
-              <span class="shrink-0 text-xs text-neutral-500">
+              <span class="shrink-0 text-xs text-ink-muted">
                 <template v-if="other.inUse">In use · </template>
                 {{ other.count }} {{ other.count === 1 ? "favorite" : "favorites" }}
               </span>
@@ -406,7 +455,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
         </ul>
       </details>
 
-      <p v-if="isEmpty" class="mt-8 text-neutral-500">
+      <p v-if="isEmpty" class="mt-8 text-ink-muted">
         No favorites yet. Open an event in the timetable or a work on the art trail and add it to
         your favorites.
       </p>
@@ -415,17 +464,35 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
           {{ formatDay(day.date, { weekday: "long", day: "numeric", month: "long" }) }}
         </h2>
         <ul class="mt-2 border-t border-ink">
+          <li v-if="day.pastCount" class="border-b border-line">
+            <button
+              type="button"
+              :aria-expanded="showPast"
+              class="flex w-full items-center gap-2 py-2.5 text-left text-sm text-ink-muted transition-colors hover:bg-block hover:text-ink"
+              @click="togglePast"
+            >
+              <Icon
+                name="material-symbols:expand-more"
+                class="size-5 shrink-0 transition-transform"
+                :class="{ 'rotate-180': showPast }"
+                aria-hidden="true"
+              />
+              {{ showPast ? "Hide" : "Show" }} {{ day.pastCount }} past
+              {{ day.pastCount === 1 ? "favorite" : "favorites" }}
+            </button>
+          </li>
           <li
-            v-for="{ event, gap, walk } in day.events"
+            v-for="{ event, past, gap, walk } in day.events"
             :key="event.id"
             class="relative border-b border-line"
+            :class="{ 'opacity-60': past }"
           >
             <!-- On the line above, below the previous favorite's end time. Red when there's no
                  time to get there. -->
             <span
               v-if="gap !== null"
               class="absolute -top-2 left-0 bg-paper pr-1.5 text-[11px] leading-4 tabular-nums"
-              :class="gap < (walk ?? 0) ? 'text-red-700/70' : 'text-neutral-400'"
+              :class="gap < (walk ?? 0) ? 'text-red-700/80 dark:text-red-400/80' : 'text-ink-faint'"
             >
               <span class="sr-only">{{ gap < 0 ? "Overlaps by" : "Break of" }} </span>
               {{ gap < 0 ? `−${formatDuration(-gap)}` : gap ? formatDuration(gap) : "No break" }}
@@ -437,7 +504,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
             >
               <!-- The end time sits at the bottom of the item. -->
               <span
-                class="flex w-12 shrink-0 flex-col justify-between gap-1 text-sm text-neutral-500 tabular-nums"
+                class="flex w-12 shrink-0 flex-col justify-between gap-1 text-sm text-ink-muted tabular-nums"
               >
                 <span>{{ event.start }}</span>
                 <span v-if="event.end"><span class="sr-only">to </span>{{ event.end }}</span>
@@ -448,7 +515,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
                 </span>
                 <span
                   v-if="event.speakers || event.venue"
-                  class="mt-0.5 block text-xs text-neutral-500"
+                  class="mt-0.5 block text-xs text-ink-muted"
                 >
                   {{ [event.speakers, event.venue].filter(Boolean).join(" · ") }}
                 </span>
@@ -478,7 +545,7 @@ useSeoMeta({ title: "Favorites · KIKK 2026", robots: "noindex" });
                 <span class="block font-display leading-tight font-semibold">
                   {{ item.title }}
                 </span>
-                <span class="mt-0.5 block text-xs text-neutral-500">
+                <span class="mt-0.5 block text-xs text-ink-muted">
                   {{ [item.artist, item.venue].filter(Boolean).join(" · ") }}
                 </span>
               </span>

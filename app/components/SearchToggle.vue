@@ -38,7 +38,7 @@ async function closeSearch() {
         type="search"
         enterkeyhint="search"
         :placeholder="placeholder"
-        class="w-full bevel-corner appearance-none border border-ink bg-paper py-1 pr-9 pl-8 text-base leading-6 outline-none placeholder:text-neutral-500 [&::-webkit-search-cancel-button]:hidden"
+        class="w-full bevel-corner appearance-none border border-ink bg-paper py-1 pr-9 pl-8 text-base leading-6 outline-none placeholder:text-ink-muted [&::-webkit-search-cancel-button]:hidden"
         @keydown.esc="closeSearch"
         @keydown.enter="input?.blur()"
         @blur="search.trim() || (open = false)"
@@ -46,7 +46,7 @@ async function closeSearch() {
     </label>
     <button
       type="button"
-      class="absolute top-1/2 right-1 flex -translate-y-1/2 p-1 text-neutral-500 transition-colors hover:text-ink"
+      class="absolute top-1/2 right-1 flex -translate-y-1/2 p-1 text-ink-muted transition-colors hover:text-ink"
       @click="closeSearch"
     >
       <Icon name="material-symbols:close" class="size-5" aria-hidden="true" />

@@ -1,6 +1,16 @@
 export type TimetableEvent = Pick<
   FestivalEvent,
-  "id" | "kind" | "slug" | "title" | "date" | "start" | "end" | "startsAt" | "venue" | "image"
+  | "id"
+  | "kind"
+  | "slug"
+  | "title"
+  | "date"
+  | "start"
+  | "end"
+  | "startsAt"
+  | "endsAt"
+  | "venue"
+  | "image"
 > & {
   /** Speaker names for the card, null when there are none or they're the title. */
   speakers: string | null;
@@ -161,6 +171,13 @@ export function formatDay(date: string, options: Intl.DateTimeFormatOptions): st
   return new Intl.DateTimeFormat("en-GB", { ...options, timeZone: "UTC" }).format(
     new Date(`${date}T12:00:00Z`),
   );
+}
+
+/** Whether an event is over at `now` (ms). Without an end, it's given an hour; untimed never end. */
+export function hasEnded(event: Pick<TimetableEvent, "startsAt" | "endsAt">, now: number): boolean {
+  if (event.endsAt) return Date.parse(event.endsAt) <= now;
+  if (event.startsAt) return Date.parse(event.startsAt) + DEFAULT_DURATION * 60_000 <= now;
+  return false;
 }
 
 /** Today's date at the festival, `YYYY-MM-DD`. */

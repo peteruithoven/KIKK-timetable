@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const props = defineProps<{ person: Person }>();
+// `photoName` is the portrait's `?photo=` value when it's open full screen.
+const props = defineProps<{ person: Person; photoName: string }>();
 
 const details = computed(() =>
   [localize(props.person.role)?.text, props.person.company, localize(props.person.location)?.text]
@@ -11,21 +12,28 @@ const bio = computed(() => localize(props.person.bio));
 
 <template>
   <div class="flex gap-4">
-    <img
+    <PhotoLink
       v-if="person.photo"
-      :src="resizedImage(person.photo, 160, 160)"
-      crossorigin="anonymous"
-      alt=""
-      loading="lazy"
-      class="size-16 shrink-0 bg-block object-cover sm:size-20"
-    />
+      :src="person.photo"
+      :name="photoName"
+      :label="`Photo of ${person.name}`"
+      class="shrink-0"
+    >
+      <img
+        :src="resizedImage(person.photo, 160, 160)"
+        crossorigin="anonymous"
+        alt=""
+        loading="lazy"
+        class="block size-16 bg-block object-cover sm:size-20"
+      />
+    </PhotoLink>
     <div class="min-w-0">
       <p class="font-display text-lg leading-tight font-bold">{{ person.name }}</p>
-      <p v-if="details" class="mt-0.5 text-sm text-neutral-500">{{ details }}</p>
+      <p v-if="details" class="mt-0.5 text-sm text-ink-muted">{{ details }}</p>
       <!-- Sanitized on the server, see server/utils/kikk-mapping.ts -->
       <div
         v-if="bio"
-        class="rich-text mt-3 max-w-prose text-sm leading-relaxed text-neutral-700"
+        class="rich-text mt-3 max-w-prose text-sm leading-relaxed text-ink-soft"
         :lang="bio.lang"
         v-html="bio.text"
       />

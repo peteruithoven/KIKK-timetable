@@ -104,12 +104,26 @@ onMounted(() => {
 });
 onBeforeUnmount(() => clearInterval(timer));
 
-const nowTop = computed(() => {
+function timeTop(time: number | null) {
   const { startsAt, length } = props.timetable;
-  if (now.value === null || startsAt === null) return null;
-  const minutes = (now.value - startsAt) / 60_000;
+  if (time === null || startsAt === null) return null;
+  const minutes = (time - startsAt) / 60_000;
   return minutes >= 0 && minutes <= length ? minutes * pxPerMinute.value : null;
-});
+}
+const nowTop = computed(() => timeTop(now.value));
+
+/**
+ * Scrolls the current time to a third of the height below the venue names, when it's on this
+ * day. Returns whether it did.
+ */
+function scrollToNow(scroller: HTMLElement) {
+  const top = timeTop(Date.now());
+  if (top === null || !grid.value) return false;
+  const header = (grid.value.firstElementChild as HTMLElement).offsetHeight;
+  scroller.scrollTop = top - (scroller.clientHeight - header) / 3;
+  return true;
+}
+defineExpose({ scrollToNow });
 </script>
 
 <template>
@@ -117,7 +131,7 @@ const nowTop = computed(() => {
     <div
       class="sticky top-0 left-0 z-30 flex flex-col items-center justify-center border-b border-ink bg-paper py-2 leading-none"
     >
-      <span class="text-[10px] text-neutral-500 uppercase">
+      <span class="text-[10px] text-ink-muted uppercase">
         {{ formatDay(date, { weekday: "short" }) }}
       </span>
       <span class="font-display text-lg font-bold">{{ formatDay(date, { day: "numeric" }) }}</span>
@@ -133,7 +147,7 @@ const nowTop = computed(() => {
     >
       <span
         v-if="venueParts(venue.name).building"
-        class="truncate text-[10px] tracking-[0.12em] text-neutral-500 uppercase"
+        class="truncate text-[10px] tracking-[0.12em] text-ink-muted uppercase"
       >
         {{ venueParts(venue.name).building }}
       </span>
@@ -151,7 +165,7 @@ const nowTop = computed(() => {
       <span
         v-for="hour in hours"
         :key="hour.label"
-        class="absolute right-2 mt-1 text-xs font-light text-neutral-400 tabular-nums"
+        class="absolute right-2 mt-1 text-xs font-light text-ink-faint tabular-nums"
         :style="{ top: `${hour.top}px` }"
       >
         {{ hour.label }}

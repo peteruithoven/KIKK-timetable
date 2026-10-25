@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const props = defineProps<{ images: string[]; index: number }>();
+// `label` names a single image (a cover photo, a portrait), a gallery's photos are numbered.
+const props = defineProps<{ images: string[]; index: number; label?: string }>();
+const isGallery = computed(() => props.label === undefined);
 const emit = defineEmits<{ close: []; show: [index: number] }>();
 
 const MAX_ZOOM = 6;
@@ -13,7 +15,7 @@ const canvas = useTemplateRef("canvas");
 const image = useTemplateRef("image");
 
 const src = computed(() => resizedImage(props.images[props.index]!, 2500));
-const label = computed(() => `Photo ${props.index + 1} of ${props.images.length}`);
+const label = computed(() => props.label ?? `Photo ${props.index + 1} of ${props.images.length}`);
 
 // The area below the header works like a map: pinch, Ctrl + scroll or double-click to zoom,
 // scroll or drag to move around. The viewer zooms the photo itself: the browser's zoom would
@@ -269,7 +271,7 @@ useHead({ htmlAttrs: { class: "overflow-hidden" } });
   <dialog
     ref="dialog"
     :aria-label="label"
-    class="m-0 h-dvh max-h-none w-full max-w-none touch-pan-x touch-pan-y flex-col overflow-hidden bg-ink p-0 text-paper backdrop:bg-ink open:flex"
+    class="palette-light m-0 h-dvh max-h-none w-full max-w-none touch-pan-x touch-pan-y flex-col overflow-hidden bg-ink p-0 text-paper backdrop:bg-ink open:flex"
     @close="emit('close')"
   >
     <nav
@@ -282,21 +284,19 @@ useHead({ htmlAttrs: { class: "overflow-hidden" } });
       >
         <Icon name="material-symbols:arrow-left-alt" class="size-4" aria-hidden="true" /> Back
       </button>
-      <div class="flex items-center gap-2">
+      <div v-if="isGallery" class="flex items-center gap-2">
         <span class="text-xs text-neutral-400">{{ label }}</span>
-        <template v-if="images.length > 1">
-          <button
-            v-for="button in navButtons"
-            :key="button.direction"
-            type="button"
-            :aria-label="button.label"
-            :disabled="!images[index + button.step]"
-            class="inline-flex bevel-corner border border-transparent p-1.5 transition-colors not-disabled:hover:border-paper disabled:opacity-30"
-            @click="show(button.direction)"
-          >
-            <Icon :name="button.icon" class="size-4" aria-hidden="true" />
-          </button>
-        </template>
+        <button
+          v-for="button in navButtons"
+          :key="button.direction"
+          type="button"
+          :aria-label="button.label"
+          :disabled="!images[index + button.step]"
+          class="inline-flex bevel-corner border border-transparent p-1.5 transition-colors not-disabled:hover:border-paper disabled:opacity-30"
+          @click="show(button.direction)"
+        >
+          <Icon :name="button.icon" class="size-4" aria-hidden="true" />
+        </button>
       </div>
     </nav>
     <div

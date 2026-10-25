@@ -76,6 +76,8 @@ function goBack(clickEvent: MouseEvent) {
   }
 }
 
+const origin = useRequestURL({ xForwardedHost: true, xForwardedProto: true }).origin;
+
 useSeoMeta({
   title: () => `${installation.value?.title} · KIKK 2026`,
   ogTitle: () => installation.value?.title,
@@ -99,14 +101,20 @@ useSeoMeta({
       <FavoriteButton :id="installation.id" />
     </nav>
 
-    <img
+    <PhotoLink
       v-if="installation.heroImage"
-      :src="resizedImage(installation.heroImage, 1600, 900)"
-      crossorigin="anonymous"
-      alt=""
+      :src="installation.heroImage"
+      name="cover"
+      :label="`Photo of ${installation.title}`"
       :class="slideIn"
-      class="aspect-video max-h-[70vh] w-full bg-ink object-cover"
-    />
+    >
+      <img
+        :src="resizedImage(installation.heroImage, 1600, 900)"
+        crossorigin="anonymous"
+        alt=""
+        class="block aspect-video max-h-[70vh] w-full bg-ink object-cover"
+      />
+    </PhotoLink>
 
     <article :class="slideIn" class="mx-auto max-w-5xl px-4 pt-6 pb-16">
       <div class="flex flex-wrap gap-2">
@@ -118,7 +126,7 @@ useSeoMeta({
         <span
           v-for="tag in installation.tags"
           :key="tag"
-          class="border border-line px-2.5 py-1 font-display text-[11px] font-semibold tracking-[0.12em] text-neutral-600 uppercase"
+          class="border border-line px-2.5 py-1 font-display text-[11px] font-semibold tracking-[0.12em] text-ink-soft uppercase"
         >
           {{ tag }}
         </span>
@@ -138,7 +146,7 @@ useSeoMeta({
         class="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-line py-5 sm:grid-cols-4"
       >
         <div v-if="venue">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Venue</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Venue</dt>
           <dd class="mt-1 font-display font-bold">
             <NuxtLink
               v-if="venue.mapPath"
@@ -151,11 +159,11 @@ useSeoMeta({
           </dd>
         </div>
         <div v-if="installation.year">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Year</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Year</dt>
           <dd class="mt-1 font-display font-bold">{{ installation.year }}</dd>
         </div>
         <div v-if="installation.medium" class="col-span-2">
-          <dt class="text-[11px] tracking-[0.12em] text-neutral-500 uppercase">Medium</dt>
+          <dt class="text-[11px] tracking-[0.12em] text-ink-muted uppercase">Medium</dt>
           <dd class="mt-1 font-display font-bold">{{ installation.medium }}</dd>
         </div>
       </dl>
@@ -165,7 +173,7 @@ useSeoMeta({
           :href="installation.url"
           target="_blank"
           rel="noopener"
-          class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-neutral-700"
+          class="inline-flex items-center gap-1.5 clip-corner bg-ink px-4 py-2.5 font-display text-xs font-bold tracking-[0.12em] text-paper uppercase transition-colors hover:bg-ink-soft"
         >
           More on kikkfestival.be
           <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
@@ -181,6 +189,12 @@ useSeoMeta({
           {{ link.label }}
           <Icon name="material-symbols:arrow-outward" class="size-4" aria-hidden="true" />
         </a>
+        <ShareButton
+          :url="`${origin}${route.path}`"
+          :title="`${installation.title} · KIKK 2026`"
+          tracking-event="installation_shared"
+          secondary
+        />
       </div>
 
       <!-- Intro, description and bio are sanitized on the server, see server/utils/kikk-mapping.ts -->
@@ -193,7 +207,7 @@ useSeoMeta({
       </EventSection>
       <EventSection v-if="description" label="About">
         <div
-          class="rich-text max-w-prose leading-relaxed text-neutral-700"
+          class="rich-text max-w-prose leading-relaxed text-ink-soft"
           :lang="description.lang"
           v-html="description.text"
         />
@@ -203,7 +217,7 @@ useSeoMeta({
         v-if="installation.artist && (installation.artist.bio || installation.artist.photo)"
         label="Artist"
       >
-        <EventPerson :person="installation.artist" />
+        <EventPerson :person="installation.artist" photo-name="artist" />
       </EventSection>
       <EventSection v-if="sameVenue.length" :label="`Also at ${venue?.name}`">
         <ul class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
