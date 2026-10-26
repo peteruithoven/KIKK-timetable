@@ -36,7 +36,11 @@ const links = computed(() =>
   [
     { label: "Website", url: installation.value?.websiteUrl },
     { label: "Instagram", url: installation.value?.instagramUrl },
-    { label: "Facebook", url: installation.value?.facebookUrl },
+    // Some artists put another profile, like LinkedIn, in the Facebook field.
+    {
+      label: installation.value?.facebookUrl?.includes("linkedin.com") ? "LinkedIn" : "Facebook",
+      url: installation.value?.facebookUrl,
+    },
   ].filter((link): link is { label: string; url: string } => Boolean(link.url)),
 );
 

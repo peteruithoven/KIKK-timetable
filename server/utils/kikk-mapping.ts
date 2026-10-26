@@ -34,6 +34,31 @@ function text(value: string | null | undefined): string | null {
   return value?.trim() || null;
 }
 
+/**
+ * Absolute link, or null. The CMS has links without a scheme (`www.instagram.com/…`,
+ * `warana.xyz`), which browsers would resolve as paths on this site, and Instagram handles
+ * (`@name`, `name`).
+ */
+function link(value: string | null | undefined, handleBase?: string): string | null {
+  const source = text(value);
+  if (!source) return null;
+  const handle = source.match(/^@?([\w.]+)$/);
+  const absolute =
+    handleBase && handle && (source.startsWith("@") || !source.includes("."))
+      ? `${handleBase}${handle[1]}`
+      : /^[a-z][a-z\d+.-]*:/i.test(source)
+        ? source
+        : `https://${source.replace(/^\/+/, "")}`;
+  try {
+    const url = new URL(absolute);
+    return ["http:", "https:"].includes(url.protocol) && url.hostname.includes(".")
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function localized(fr: string | null | undefined, en: string | null | undefined): Localized | null {
   const result = { fr: text(fr), en: text(en) };
   return result.fr || result.en ? result : null;
@@ -176,7 +201,7 @@ function fromConference(row: ConferenceRow): FestivalEvent | null {
     ...images(row),
     tags: tags(row),
     language: text(row.language)?.toLowerCase() ?? null,
-    websiteUrl: text(row.website_url),
+    websiteUrl: link(row.website_url),
     ticketUrl: null,
   };
 }
@@ -200,8 +225,8 @@ function fromByNight(row: ByNightRow): FestivalEvent | null {
     ...images(row),
     tags: tags(row),
     language: null,
-    websiteUrl: text(row.website_url),
-    ticketUrl: text(row.ticket_url),
+    websiteUrl: link(row.website_url),
+    ticketUrl: link(row.ticket_url),
   };
 }
 
@@ -321,9 +346,9 @@ function fromInstallation(row: InstallationRow, trail: TrailData): Installation 
     gallery: gallery(row.gallery_images, heroImage),
     credit: text(row.carousel_credit),
     tags: tags(row),
-    websiteUrl: text(row.website_url),
-    instagramUrl: text(row.instagram_url),
-    facebookUrl: text(row.facebook_url),
+    websiteUrl: link(row.website_url),
+    instagramUrl: link(row.instagram_url, "https://www.instagram.com/"),
+    facebookUrl: link(row.facebook_url),
   };
 }
 
